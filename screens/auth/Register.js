@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Text, TextInput, View, Image } from "react-native";
+import {
+  Text,
+  TextInput,
+  View,
+  Image,
+  KeyboardAvoidingView,
+} from "react-native";
 import { container, form } from "../../styles/authStyle";
 import PrimaryButton from "../../components/button/PrimaryButton";
 

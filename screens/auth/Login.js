@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import {
-  Button,
   Text,
   TextInput,
   View,
   Image,
-  SafeAreaView,
+  KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import PrimaryButton from "../../components/button/PrimaryButton";
 import { container, form } from "../../styles/authStyle";
@@ -33,7 +33,8 @@ export default function Login(props) {
     }
   };
   return (
-    <View style={container.center}>
+    // <ScrollView >
+    <KeyboardAvoidingView style={container.center} behavior="">
       <View style={container.formCenter}>
         <View
           style={{
@@ -78,6 +79,7 @@ export default function Login(props) {
           Don't have an account? SignUp.
         </Text>
       </View>
-    </View>
+    </KeyboardAvoidingView>
+    // </ScrollView>
   );
 }
