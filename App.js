@@ -3,6 +3,7 @@ import HomeScreen from "./screens/Home";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import RegisterScreen from "./screens/auth/Register";
 import LoginScreen from "./screens/auth/Login";
+import ProfileScreen from "./screens/Profile";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
@@ -21,7 +22,7 @@ function AuthScreen() {
       }}
       initialRouteName="Login"
     >
-      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Login" component={ProfileScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
     </Stack.Navigator>
   );
