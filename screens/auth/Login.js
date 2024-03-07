@@ -8,6 +8,8 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
+import {useSelector, useDispatch} from "react-redux"
+import { setAccessToken } from "../../store/redux/slices/authSlice";
 import PrimaryButton from "../../components/button/PrimaryButton";
 import { container, form } from "../../styles/authStyle";
 import useHttpClient from "../../axios/public-http-hook";
@@ -22,33 +24,37 @@ const UsersCanLogin = [
 export default function Login(props) {
   const pulicHttpRequest = useHttpClient();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const dispatch = useDispatch();
+  const [formData, setFormData] = useState({
+    username: "",
+    password: ""
+  });
+
+  const handleChangeText = (key, value) => {
+    setFormData({
+      ...formData,
+      [key]: value
+    });
+  };
 
   const onSignIn = async () => {
-    const user = UsersCanLogin.find((user) => user.username === username);
-    console.log("Nhan login");
-
-    //if (user && user.password === password) {
-    // Đăng nhập thành công
+    const url ='/auth/login'
+    console.log(url)
     try {
       const response = await pulicHttpRequest.publicRequest(
-        "/auth/login",
+        '/auth/login',
         "post",
-        {
-          username: username,
-          password: password,
-        },
+        formData,
         { headers: { "Content-type": "application/json" } }
       );
+      if (response.status !== 200) {
+        throw new Error('Đăng nhập thất bại');
+      }
+      dispatch(setAccessToken(response.data.access_token))
 
-      //Alert.alert(response.data);
-      console.log(response.data);
-    } catch (err) {}
-    //} else {
-    // Đăng nhập thất bại
-    //console.log("Đăng nhập thất bại");
-    //}
+    } catch (error) {
+      Alert.alert('Lỗi', error.message);
+    }
   };
   return (
     // <ScrollView >
@@ -75,14 +81,14 @@ export default function Login(props) {
           style={form.textInput}
           placeholder="Username"
           placeholderTextColor="gray"
-          onChangeText={(username) => setUsername(username)}
+          onChangeText={(value) => handleChangeText("username", value)}
         />
         <TextInput
           style={form.textInput}
           placeholder="Password"
           placeholderTextColor="gray"
           secureTextEntry={true}
-          onChangeText={(password) => setPassword(password)}
+          onChangeText={(value) => handleChangeText("password", value)}
         />
 
         <PrimaryButton onPress={onSignIn}>Sign In</PrimaryButton>

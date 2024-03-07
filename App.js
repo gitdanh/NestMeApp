@@ -22,7 +22,7 @@ function AuthScreen() {
       }}
       initialRouteName="Login"
     >
-      <Stack.Screen name="Login" component={ProfileScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
     </Stack.Navigator>
   );
@@ -38,7 +38,6 @@ function AuthenticatedScreen() {
 
 function Navigation() {
   const accessToken = useSelector((state) => state.authenticate.accessToken);
-
   return (
     <NavigationContainer>
       {accessToken === null ? <AuthScreen /> : <AuthenticatedScreen />}
