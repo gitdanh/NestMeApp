@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, ScrollView, Image } from "react-native";
 import Feed from "../components/Feed";
+import Footer from "../components/Footer";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconFeather from "react-native-vector-icons/Feather";
@@ -32,12 +33,7 @@ function Home(props) {
           <Feed username={"da"} />
           <Feed username={"duongngu"} />
         </ScrollView>
-        <View style={styles.footer}>
-          <Icon color={"#ffff"} size={25} name="home" />
-          <Icon color={"gray"} size={25} name="search" />
-          <Icon color={"gray"} size={25} name="plus-square" />
-          <IconFeather color={"gray"} size={25} name="log-out" />
-        </View>
+        <Footer/>
       </View>
     </>
   );
@@ -54,6 +50,7 @@ export const styles = StyleSheet.create({
   },
   header: {
     display: "flex",
+    height: 52,
     marginTop: 30,
     flexDirection: "row",
     justifyContent: "space-between",
