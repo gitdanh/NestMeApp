@@ -7,7 +7,7 @@ import IconFeather from "react-native-vector-icons/Feather";
 import { StatusBar } from "expo-status-bar";
 
 function Home(props) {
-  const { loginUser } = props.route.params;
+  //const { loginUser } = props.route.params;
 
   return (
     <>
@@ -29,8 +29,8 @@ function Home(props) {
           </View>
         </View>
         <ScrollView style={styles.feedContainer}>
-          <Feed username={loginUser.username} />
-          <Feed username={loginUser.username} />
+          <Feed username={"da"} />
+          <Feed username={"duongngu"} />
         </ScrollView>
         <View style={styles.footer}>
           <Icon color={"#ffff"} size={25} name="home" />
