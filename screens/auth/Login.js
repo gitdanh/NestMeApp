@@ -8,7 +8,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import {useSelector, useDispatch} from "react-redux"
+import { useSelector, useDispatch } from "react-redux";
 import { setAccessToken } from "../../store/redux/slices/authSlice";
 import PrimaryButton from "../../components/button/PrimaryButton";
 import { container, form } from "../../styles/authStyle";
@@ -27,33 +27,33 @@ export default function Login(props) {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     username: "",
-    password: ""
+    password: "",
   });
 
   const handleChangeText = (key, value) => {
     setFormData({
       ...formData,
-      [key]: value
+      [key]: value,
     });
   };
 
   const onSignIn = async () => {
-    const url ='/auth/login'
-    console.log(url)
+    const url = "/auth/login";
+
     try {
       const response = await pulicHttpRequest.publicRequest(
-        '/auth/login',
+        "/auth/login",
         "post",
         formData,
         { headers: { "Content-type": "application/json" } }
       );
       if (response.status !== 200) {
-        throw new Error('Đăng nhập thất bại');
+        throw new Error("Đăng nhập thất bại");
       }
-      dispatch(setAccessToken(response.data.access_token))
-
+      console.log("Token login: " + response.data.accessToken);
+      dispatch(setAccessToken(response.data.accessToken));
     } catch (error) {
-      Alert.alert('Lỗi', error.message);
+      Alert.alert("Lỗi", error.message);
     }
   };
   return (

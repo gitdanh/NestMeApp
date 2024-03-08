@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import axios from "axios";
 import useRefreshToken from "./refresh-token";
 
@@ -15,6 +15,8 @@ const axiosPrivate = axios.create({
 const useAxiosPrivate = () => {
   const { refresh } = useRefreshToken();
   const accessToken = useSelector((state) => state.authenticate.accessToken);
+
+  console.log(accessToken);
 
   useEffect(() => {
     const requestIntercept = axiosPrivate.interceptors.request.use(

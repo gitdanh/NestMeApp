@@ -1,13 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, ScrollView, Image } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  FlatList,
+} from "react-native";
 import Feed from "../components/Feed";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconFeather from "react-native-vector-icons/Feather";
 import { StatusBar } from "expo-status-bar";
+import usePrivateHttpClient from "../axios/private-http-hook";
 
 function Home(props) {
   //const { loginUser } = props.route.params;
+  const { privateRequest } = usePrivateHttpClient();
+
+  const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMorePost, setHasMorePost] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(false);
+
+  const getPosts = useCallback(async () => {
+    try {
+      setPostsLoading(true);
+      const response = await privateRequest(`/posts?page=${page}?limit=10`);
+      const data = response.data;
+
+      if (data) {
+        const postsCount = data.posts.length;
+        setHasMorePost(postsCount > 0 && postsCount === 10);
+
+        if (postsCount > 0 && page === 1) setPosts(data.posts);
+        else setPosts((prev) => [...prev, ...data.posts]);
+      }
+      setPostsLoading(false);
+    } catch (err) {
+      setPostsLoading(false);
+      console.error("home posts ", err);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    getPosts();
+    setPosts(posts.filter((post) => post?.group === null));
+  }, [page]);
 
   return (
     <>
@@ -28,16 +67,18 @@ function Home(props) {
             <IconAnt color={"#ffff"} size={25} name="message1" />
           </View>
         </View>
-        <ScrollView style={styles.feedContainer}>
-          <Feed username={"da"} />
-          <Feed username={"duongngu"} />
-        </ScrollView>
-        <View style={styles.footer}>
-          <Icon color={"#ffff"} size={25} name="home" />
-          <Icon color={"gray"} size={25} name="search" />
-          <Icon color={"gray"} size={25} name="plus-square" />
-          <IconFeather color={"gray"} size={25} name="log-out" />
-        </View>
+        {posts.length > 0 && (
+          <FlatList
+            style={styles.feedContainer}
+            data={posts}
+            renderItem={(itemData) => {
+              return <Feed post={itemData.item} />;
+            }}
+            keyExtractor={(item, index) => {
+              return item.postId;
+            }}
+          />
+        )}
       </View>
     </>
   );

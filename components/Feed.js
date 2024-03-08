@@ -1,28 +1,25 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
 
-const Feed = ({ username }) => {
+const Feed = forwardRef(({ post }, ref) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
         <View style={styles.headerLeftWrapper}>
           <Image
             style={styles.profileThumb}
-            source={require("../assets/favicon.png")}
+            source={{ uri: post.creator.profile_picture }}
           />
-          <Text style={styles.headerTitle}> {username}</Text>
+          <Text style={styles.headerTitle}> {post.creator.username}</Text>
         </View>
         <IconEntypo color={"#ffff"} size={20} name="dots-three-vertical" />
       </View>
       <View>
-        <Image
-          style={styles.feedImage}
-          source={require("../assets/logo.jpg")}
-        />
+        <Image style={styles.feedImage} source={{ uri: post.media[0] }} />
       </View>
       <View style={styles.feedImageFooter}>
         <View style={styles.feddimageFooterLeftWrapper}>
@@ -43,7 +40,7 @@ const Feed = ({ username }) => {
         <Icon color={"#ffff"} size={25} name="bookmark-o" />
       </View>
       <View style={styles.likesAndCommentsWrapper}>
-        <Text style={styles.likesTitle}> 1,124 Likes</Text>
+        <Text style={styles.likesTitle}> {post.reacts_count} Likes</Text>
         <Text>
           {" "}
           {/* <Text style={styles.headerTitle}> Catherine</Text>{' '}
@@ -52,7 +49,7 @@ const Feed = ({ username }) => {
       </View>
     </View>
   );
-};
+});
 
 export default Feed;
 
@@ -86,6 +83,7 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
   },
   feedImage: {
+    height: 370,
     width: "100%",
   },
   feedImageFooter: {
