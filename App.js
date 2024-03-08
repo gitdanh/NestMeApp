@@ -12,6 +12,7 @@ import { Provider } from "react-redux";
 import { store } from "./store/redux/store";
 import { useSelector } from "react-redux";
 import { SafeAreaView } from "react-native";
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,11 +34,35 @@ function AuthScreen() {
 function AuthenticatedScreen() {
   return (
     <Tab.Navigator
-      screenOptions={{
+      initialRouteName={"Home"}
+      screenOptions={({ route }) => ({
+        tabBarStyle: { backgroundColor: 'black',padding: 10, height: 65, borderColor: '#262626' },
         headerShown: false,
-        tabBarActiveBackgroundColor: "#E8E8E8",
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          let rn = route.name;
+
+          if (rn === "Home") {
+            iconName = focused ? 'home' : 'home-outline';
+
+          } else if (rn === "Profile") {
+            iconName = focused ? 'list' : 'list-outline';
+
+          } else if (rn === "Chat") {
+            iconName = focused ? 'settings' : 'settings-outline';
+          }
+
+          // You can return any component that you like here!
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+      tabBarOptions={{
+        activeTintColor: '#FFFFFF',
+        inactiveTintColor: '#888888',
+        labelStyle: { paddingBottom: 10, fontSize: 10 },
+        style: { padding: 10, height: 70}
       }}
-    >
+      >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Chat" component={ChatScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
