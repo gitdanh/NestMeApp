@@ -10,7 +10,7 @@ const ProfileDetails = () => {
     return (
         <View style={{paddingHorizontal: 15}}>
             <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 15}}>
-                <Image style={{height: 80, width: 80, borderRadius: 50}} source={require('../assets/logo.jpg')}/>
+                <Image style={{height: 80, width: 80, borderRadius: 50}} source={require('../../assets/logo.jpg')}/>
                 <View style={{width: 75, alignItems: 'center'}}>
                     <Text style={{fontSize: 24, fontWeight: '500', color: 'white'}}> 4</Text>
                     <Text style={{fontSize: 16, fontWeight: '500', color: 'white'}}> Posts</Text>

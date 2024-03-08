@@ -8,6 +8,7 @@ import {
   FlatList,
 } from "react-native";
 import Feed from "../components/Feed";
+import Footer from "../components/Footer";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconFeather from "react-native-vector-icons/Feather";
@@ -95,6 +96,7 @@ export const styles = StyleSheet.create({
   },
   header: {
     display: "flex",
+    height: 52,
     marginTop: 30,
     flexDirection: "row",
     justifyContent: "space-between",
