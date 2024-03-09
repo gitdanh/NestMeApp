@@ -37,6 +37,12 @@ function AuthenticatedScreen() {
       initialRouteName={"Home"}
       screenOptions={({ route }) => ({
         tabBarStyle: { backgroundColor: 'black',padding: 10, height: 65, borderColor: '#262626' },
+        tabBarActiveTintColor: "#FFFFFF",
+        tabBarInactiveTintColor: "#888888",
+        tabBarLabelStyle: {
+          "paddingBottom": 10,
+          "fontSize": 10
+        },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -56,12 +62,6 @@ function AuthenticatedScreen() {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
-      tabBarOptions={{
-        activeTintColor: '#FFFFFF',
-        inactiveTintColor: '#888888',
-        labelStyle: { paddingBottom: 10, fontSize: 10 },
-        style: { padding: 10, height: 70}
-      }}
       >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Chat" component={ChatScreen} />
