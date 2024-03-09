@@ -50,7 +50,7 @@ export default function Login(props) {
       if (response.status !== 200) {
         throw new Error("Đăng nhập thất bại");
       }
-      console.log("Token login: " + response.data.accessToken);
+
       dispatch(setAccessToken(response.data.accessToken));
     } catch (error) {
       Alert.alert("Lỗi", error.message);

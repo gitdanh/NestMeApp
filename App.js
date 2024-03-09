@@ -54,9 +54,7 @@ function Navigation() {
   const accessToken = useSelector((state) => state.authenticate.accessToken);
   return (
     <NavigationContainer>
-      {/* {accessToken === null ? <AuthScreen /> :  */}
-      <AuthenticatedScreen />
-      {/* } */}
+      {accessToken === null ? <AuthScreen /> : <AuthenticatedScreen />}
     </NavigationContainer>
   );
 }
