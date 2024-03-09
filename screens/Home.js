@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Text,
   View,
@@ -23,6 +23,47 @@ function Home(props) {
   const [page, setPage] = useState(1);
   const [hasMorePost, setHasMorePost] = useState(true);
   const [postsLoading, setPostsLoading] = useState(false);
+  const [isEndReached, setIsEndReached] = useState(false);
+
+  // const observer = useRef();
+  // const lastPostRef = useCallback(
+  //   (node) => {
+  //     if (postsLoading) return;
+
+  //     if (observer.current) observer.current.disconnect();
+
+  //     observer.current = new IntersectionObserver((entries) => {
+  //       if (entries[0].isIntersecting && hasMorePost) {
+  //         console.log("Last post");
+  //         setPage((prev) => prev + 1);
+  //       }
+  //     });
+
+  //     if (node) observer.current.observe(node);
+  //   },
+  //   [postsLoading, hasMorePost]
+  // );
+
+  const handleEndReached = () => {
+    if (!postsLoading && hasMorePost) {
+      console.log("Last post reached");
+      setPage((prev) => prev + 1);
+      setIsEndReached(true);
+    }
+  };
+
+  const lastPostRef = useCallback(
+    (index) => {
+      if (index === posts.length - 1 && !isEndReached) {
+        return {
+          onLayout: () => setIsEndReached(false),
+          ref: lastPostRef,
+        };
+      }
+      return null;
+    },
+    [isEndReached, posts.length]
+  );
 
   const getPosts = useCallback(async () => {
     try {
@@ -33,9 +74,9 @@ function Home(props) {
       if (data) {
         const postsCount = data.posts.length;
         setHasMorePost(postsCount > 0 && postsCount === 10);
+        data.posts.filter((post) => post?.group === null);
 
-        if (postsCount > 0 && page === 1) setPosts(data.posts);
-        else setPosts((prev) => [...prev, ...data.posts]);
+        setPosts((prev) => [...prev, ...data.posts]);
       }
       setPostsLoading(false);
     } catch (err) {
@@ -46,7 +87,6 @@ function Home(props) {
 
   useEffect(() => {
     getPosts();
-    setPosts(posts.filter((post) => post?.group === null));
   }, [page]);
 
   return (
@@ -73,11 +113,15 @@ function Home(props) {
             style={styles.feedContainer}
             data={posts}
             renderItem={(itemData) => {
-              return <Feed post={itemData.item} />;
+              return (
+                <Feed post={itemData.item} {...lastPostRef(itemData.index)} />
+              );
             }}
             keyExtractor={(item, index) => {
-              return item.postId;
+              return item._id;
             }}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.1}
           />
         )}
       </View>

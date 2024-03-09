@@ -4,6 +4,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
+import { getAvatarSource } from "../utils/getAvatarSource";
 
 const Feed = forwardRef(({ post }, ref) => {
   return (
@@ -12,7 +13,7 @@ const Feed = forwardRef(({ post }, ref) => {
         <View style={styles.headerLeftWrapper}>
           <Image
             style={styles.profileThumb}
-            source={{ uri: post.creator.profile_picture }}
+            source={getAvatarSource(post.creator.profile_picture)}
           />
           <Text style={styles.headerTitle}> {post.creator.username}</Text>
         </View>
@@ -39,14 +40,23 @@ const Feed = forwardRef(({ post }, ref) => {
         </View>
         <Icon color={"#ffff"} size={25} name="bookmark-o" />
       </View>
-      <View style={styles.likesAndCommentsWrapper}>
-        <Text style={styles.likesTitle}> {post.reacts_count} Likes</Text>
-        <Text>
-          {" "}
-          {/* <Text style={styles.headerTitle}> Catherine</Text>{' '}
+      {ref ? (
+        <View ref={ref} style={styles.likesAndCommentsWrapper}>
+          <Text style={styles.likesTitle}> {post.reacts_count} Likes</Text>
+          <Text>
+            {/* <Text style={styles.headerTitle}> Catherine</Text>{' '}
           <Text style={styles.likesTitle}> Missing Summary </Text> */}
-        </Text>
-      </View>
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.likesAndCommentsWrapper}>
+          <Text style={styles.likesTitle}> {post.reacts_count} Likes</Text>
+          <Text>
+            {/* <Text style={styles.headerTitle}> Catherine</Text>{' '}
+          <Text style={styles.likesTitle}> Missing Summary </Text> */}
+          </Text>
+        </View>
+      )}
     </View>
   );
 });
