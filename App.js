@@ -10,9 +10,12 @@ import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
 import { store } from "./store/redux/store";
-import { useSelector } from "react-redux";
-import { SafeAreaView } from "react-native";
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useSelector, useDispatch } from "react-redux";
+import { Alert, SafeAreaView } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { useCallback, useEffect } from "react";
+import usePrivateHttpClient from "./axios/private-http-hook";
+import { setLoginInfo } from "./store/redux/slices/authSlice";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,16 +35,44 @@ function AuthScreen() {
 }
 
 function AuthenticatedScreen() {
+  const { privateRequest } = usePrivateHttpClient();
+  const dispatch = useDispatch();
+
+  const getLoginUserInfo = async () => {
+    try {
+      const response = await privateRequest("/users/auth-user");
+      if (response) {
+        dispatch(
+          setLoginInfo({
+            username: response.data.user.username,
+            userId: response.data.user._id,
+          })
+        );
+      }
+    } catch (err) {
+      Alert.alert("Error get login username", err.message);
+    }
+  };
+
+  useEffect(() => {
+    getLoginUserInfo();
+  }, []);
+
   return (
     <Tab.Navigator
       initialRouteName={"Home"}
       screenOptions={({ route }) => ({
-        tabBarStyle: { backgroundColor: 'black',padding: 10, height: 65, borderColor: '#262626' },
+        tabBarStyle: {
+          backgroundColor: "black",
+          padding: 10,
+          height: 65,
+          borderColor: "#262626",
+        },
         tabBarActiveTintColor: "#FFFFFF",
         tabBarInactiveTintColor: "#888888",
         tabBarLabelStyle: {
-          "paddingBottom": 10,
-          "fontSize": 10
+          paddingBottom: 10,
+          fontSize: 10,
         },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
@@ -49,23 +80,25 @@ function AuthenticatedScreen() {
           let rn = route.name;
 
           if (rn === "Home") {
-            iconName = focused ? 'home' : 'home-outline';
-
+            iconName = focused ? "home" : "home-outline";
           } else if (rn === "Profile") {
-            iconName = focused ? 'list' : 'list-outline';
-
+            iconName = focused ? "list" : "list-outline";
           } else if (rn === "Chat") {
-            iconName = focused ? 'settings' : 'settings-outline';
+            iconName = focused ? "settings" : "settings-outline";
           }
 
           // You can return any component that you like here!
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
-      >
+    >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Chat" component={ChatScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        initialParams={{ isOwnProfile: true, username: "" }}
+      />
       <Tab.Screen
         name="SingleChat"
         component={SingleChat}

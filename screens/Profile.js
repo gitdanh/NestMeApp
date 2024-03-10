@@ -1,19 +1,55 @@
-import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, ScrollView, Image } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { Text, View, StyleSheet, ScrollView, Image, Alert } from "react-native";
 import ProfileHeader from "../components/Profile/ProfileHeader";
 import ProfileDetails from "../components/Profile/ProfileDetails";
 import ProfilePosts from "../components/Profile/ProfilePosts";
 import { StatusBar } from "expo-status-bar";
+import { useSelector } from "react-redux";
+import usePrivateHttpClient from "../axios/private-http-hook";
+
 function Profile(props) {
+  const { isOwnProfile, username } = props.route.params;
+  const authUsername = useSelector((state) => state.authenticate.username);
+
+  const { privateRequest } = usePrivateHttpClient();
+
+  const [usernameView, setUsernameView] = useState(
+    isOwnProfile ? authUsername : username
+  );
+  const [userData, setUserData] = useState(null);
+
+  const getProfileInfo = useCallback(async () => {
+    try {
+      const response = await privateRequest(`/users/${usernameView}`);
+      if (response) {
+        setUserData(response.data.user);
+      }
+    } catch (err) {
+      Alert.alert("Error get profile info", err.message);
+    }
+  }, [usernameView]);
+
+  useEffect(() => {
+    getProfileInfo();
+  }, [usernameView]);
 
   return (
     <>
       <StatusBar style="light" />
-      <View style={styles.container}>
-        <ProfileHeader/>
-        <ProfileDetails/>
-        <ProfilePosts/>
-      </View>
+      {userData && (
+        <View style={styles.container}>
+          <ProfileHeader username={userData?.username} />
+          <ProfileDetails
+            fullname={userData?.full_name}
+            avatar={userData?.profile_picture}
+            userInfo={userData?.user_info}
+            postsCount={userData?.posts_count}
+            friendsCount={userData?.friends_count}
+            friendRequestsCount={userData?.friend_requests_count}
+          />
+          <ProfilePosts username={userData?.username} />
+        </View>
+      )}
     </>
   );
 }
@@ -21,10 +57,10 @@ function Profile(props) {
 export default Profile;
 
 export const styles = StyleSheet.create({
-    container: {
-      display: "flex",
-      flex: 1,
-      backgroundColor: "black",
-      padding: "0 20",
-    },
-  });
+  container: {
+    display: "flex",
+    flex: 1,
+    backgroundColor: "black",
+    padding: "0 20",
+  },
+});

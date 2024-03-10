@@ -4,7 +4,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
-import { getAvatarSource } from "../utils/getAvatarSource";
+import { getAvatarSource } from "../utils/getImageSource";
 
 const Feed = forwardRef(({ post }, ref) => {
   return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Text,
   View,
@@ -16,7 +16,6 @@ import { StatusBar } from "expo-status-bar";
 import usePrivateHttpClient from "../axios/private-http-hook";
 
 function Home(props) {
-  //const { loginUser } = props.route.params;
   const { privateRequest } = usePrivateHttpClient();
 
   const [posts, setPosts] = useState([]);
@@ -24,25 +23,6 @@ function Home(props) {
   const [hasMorePost, setHasMorePost] = useState(true);
   const [postsLoading, setPostsLoading] = useState(false);
   const [isEndReached, setIsEndReached] = useState(false);
-
-  // const observer = useRef();
-  // const lastPostRef = useCallback(
-  //   (node) => {
-  //     if (postsLoading) return;
-
-  //     if (observer.current) observer.current.disconnect();
-
-  //     observer.current = new IntersectionObserver((entries) => {
-  //       if (entries[0].isIntersecting && hasMorePost) {
-  //         console.log("Last post");
-  //         setPage((prev) => prev + 1);
-  //       }
-  //     });
-
-  //     if (node) observer.current.observe(node);
-  //   },
-  //   [postsLoading, hasMorePost]
-  // );
 
   const handleEndReached = () => {
     if (!postsLoading && hasMorePost) {
