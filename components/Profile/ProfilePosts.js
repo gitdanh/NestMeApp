@@ -6,7 +6,7 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
-  SafeAreaView
+  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconMaterial from "react-native-vector-icons/MaterialIcons";
@@ -27,7 +27,7 @@ const ProfilePosts = ({ username }) => {
     try {
       setPostsLoading(true);
       const response = await privateRequest(
-        `/posts/user/${username}?page=${page}?limit=15`
+        `/posts/user/${username}?page=${page}&limit=15`
       );
       const data = response.data;
 
@@ -49,7 +49,7 @@ const ProfilePosts = ({ username }) => {
 
   const renderItems = (item) => {
     return (
-      <View style={{ width: '33%', aspectRatio: 1 }}>
+      <View style={{ width: "33%", aspectRatio: 1 }}>
         <Image
           source={{ uri: item.item.media[0] }}
           style={{ flex: 1, marginRight: 3, marginBottom: 3 }}
