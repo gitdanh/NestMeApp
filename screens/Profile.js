@@ -47,7 +47,7 @@ function Profile(props) {
             friendsCount={userData?.friends_count}
             friendRequestsCount={userData?.friend_requests_count}
           />
-          <ProfilePosts username={userData?.username} />
+          <ProfilePosts username={userData?.username}/>
         </View>
       )}
     </>

@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
+  SafeAreaView
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconMaterial from "react-native-vector-icons/MaterialIcons";
@@ -48,65 +49,67 @@ const ProfilePosts = ({ username }) => {
 
   const renderItems = (item) => {
     return (
-      <View>
+      <View style={{ width: '33%', aspectRatio: 1 }}>
         <Image
           source={{ uri: item.item.media[0] }}
-          style={{ height: 136, width: 136, marginRight: 3, marginBottom: 3 }}
+          style={{ flex: 1, marginRight: 3, marginBottom: 3 }}
         />
       </View>
     );
   };
   return (
-    <View style={{ marginTop: 20 }}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 5,
-          }}
-        >
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={{ marginTop: 20, paddingBottom: 45 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <View
             style={{
-              width: "50%",
-              paddingBottom: 15,
-              borderBottomWidth: selected === 1 ? 1 : 0,
-              borderBlockColor: "white",
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 5,
             }}
           >
-            <TouchableOpacity
-              onPress={() => setSelected(1)}
-              style={{ justifyContent: "center", alignItems: "center" }}
+            <View
+              style={{
+                width: "50%",
+                paddingBottom: 15,
+                borderBottomWidth: selected === 1 ? 1 : 0,
+                borderBlockColor: "white",
+              }}
             >
-              <IconMaterial color={"gray"} size={25} name="grid-on" />
-            </TouchableOpacity>
-          </View>
-          <View
-            style={{
-              width: "50%",
-              paddingBottom: 15,
-              borderBottomWidth: selected === 0 ? 1 : 0,
-              borderBlockColor: "white",
-            }}
-          >
-            <TouchableOpacity
-              onPress={() => setSelected(0)}
-              style={{ justifyContent: "center", alignItems: "center" }}
+              <TouchableOpacity
+                onPress={() => setSelected(1)}
+                style={{ justifyContent: "center", alignItems: "center" }}
+              >
+                <IconMaterial color={"gray"} size={25} name="grid-on" />
+              </TouchableOpacity>
+            </View>
+            <View
+              style={{
+                width: "50%",
+                paddingBottom: 15,
+                borderBottomWidth: selected === 0 ? 1 : 0,
+                borderBlockColor: "white",
+              }}
             >
-              <IconFeather color={"gray"} size={25} name="bookmark" />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setSelected(0)}
+                style={{ justifyContent: "center", alignItems: "center" }}
+              >
+                <IconFeather color={"gray"} size={25} name="bookmark" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
 
-      <FlatList
-        data={data}
-        renderItem={renderItems}
-        keyExtractor={(item) => item._id.toString()}
-        numColumns={3}
-        showsHorizontalScrollIndicator={false}
-      />
-    </View>
+        <FlatList
+          data={data}
+          renderItem={renderItems}
+          keyExtractor={(item) => item._id.toString()}
+          numColumns={3}
+          showsHorizontalScrollIndicator={false}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 export default ProfilePosts;
