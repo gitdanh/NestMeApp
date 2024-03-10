@@ -49,10 +49,10 @@ const ProfilePosts = ({ username }) => {
 
   const renderItems = (item) => {
     return (
-      <View style={{ width: '33%', aspectRatio: 1 }}>
+      <View style={{ width: '33%', aspectRatio: 1}}>
         <Image
           source={{ uri: item.item.media[0] }}
-          style={{ flex: 1, marginRight: 3, marginBottom: 3 }}
+          style={{ flex: 1, marginBottom: 3 }}
         />
       </View>
     );
@@ -107,6 +107,8 @@ const ProfilePosts = ({ username }) => {
           keyExtractor={(item) => item._id.toString()}
           numColumns={3}
           showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ justifyContent: "space-between", flexGrow: 1 }}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
         />
       </View>
     </SafeAreaView>
