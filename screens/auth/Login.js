@@ -51,9 +51,7 @@ export default function Login(props) {
       }
 
       dispatch(setAccessToken(response.data.accessToken));
-      console.log("rf token: "+response.data.refreshToken)
       AsyncStorage.setItem('refreshToken', response.data.refreshToken);
-      console.log("login: " + AsyncStorage.getItem('refreshToken'));
     } catch (error) {
       Alert.alert("Lỗi", error.message);
     }
