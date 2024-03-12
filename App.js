@@ -16,6 +16,8 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { useCallback, useEffect } from "react";
 import usePrivateHttpClient from "./axios/private-http-hook";
 import { setLoginInfo } from "./store/redux/slices/authSlice";
+import useRefreshToken from "./axios/refresh-token";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -109,7 +111,21 @@ function AuthenticatedScreen() {
 }
 
 function Navigation() {
+  const { refresh } = useRefreshToken();
   const accessToken = useSelector((state) => state.authenticate.accessToken);
+
+  useEffect(() => {
+    async function refreshAccessToken() {
+      try {
+        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        await refresh(refreshToken);
+      } catch (error) {
+        console.error('Error refreshing access token:', error);
+      }
+    }
+    refreshAccessToken();
+  }, []);
+
   return (
     <NavigationContainer>
       {accessToken === null ? <AuthScreen /> : <AuthenticatedScreen />}
