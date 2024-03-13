@@ -1,72 +1,53 @@
 //import liraries
 import Icon from "react-native-vector-icons/Ionicons";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ListItem, Avatar } from 'react-native-elements';
 import { View, Text, StyleSheet, ImageBackground, TextInput, SectionList, TouchableOpacity, FlatList } from 'react-native';
 import MsgComponent from '../components/Chat/MsgComponent';
 import IconAwe from "react-native-vector-icons/FontAwesome";
 import IconFeather from "react-native-vector-icons/Feather";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import * as messageService from '../services/messageService';
 // create a component
-
-const Data = [
-    {
-        message: 'Yes Ofcourse..',
-        type: 'sender'
-    },
-    {
-        message: 'How are You ?',
-        type: 'sender'
-    },
-    {
-        message: 'How Your Opinion about the one done app ?',
-        type: 'sender'
-    },
-    {
-        message: 'Well i am not satisfied with this design plzz make design better ',
-        type: 'receiver'
-    },
-    {
-        message: 'could you plz change the design...',
-        type: 'receiver'
-    },
-    {
-        message: 'How are You ?',
-        type: 'sender'
-    },
-    {
-        message: 'How Your Opinion about the one done app ?',
-        type: 'sender'
-    },
-    {
-        message: 'Well i am not satisfied with this design plzz make design better ',
-        type: 'receiver'
-    },
-    {
-        message: 'could you plz change the design...',
-        type: 'receiver'
-    },
-    {
-        message: 'How are You ?',
-        type: 'sender'
-    },
-    {
-        message: 'How Your Opinion about the one done app ?',
-        type: 'sender'
-    }
-]
 
 
 const SingleChat = (props) => {
 
     const { data } = props.route.params;
-
+    const user ={
+        _id: "65470a2248bc9d59982c2ddc"
+      }
     // console.log("token",token)
 
-    const [msg, setMsg] = React.useState('');
-    const [update, setupdate] = React.useState(false);
-    const [disabled, setdisabled] = React.useState(false);
-    const [allChat, setallChat] = React.useState([]);
+    const [msg, setMsg] = useState([]);
+    const [update, setupdate] = useState(false);
+    const [disabled, setdisabled] = useState(false);
+    const [allChat, setallChat] = useState([]);
+    const [fetching, setFetching] = useState(false);
+    useEffect(() => {
+        setFetching(true);
+        // console.log("day" + fetching + isLoadingMsg);
+        // console.log("Current_Chat",currentChat._id);
+        // console.log("messages",messages);
+        const fetchData = async () => {
+          try {
+            // console.log("Current_Chat",currentChat._id);
+            if(data._id && user._id){
+              const result = await messageService.getMessages(data._id, 0, user._id);
+              setMsg(result.reverse());
+            }
+          } catch (error) {
+            console.log(error);
+            setFetching(false);
+          } finally {
+            setFetching(false);
+          }
+        };
+        
+          fetchData();
+        //   console.log(msg)
+        
+      }, []);
 
 
     return (
@@ -94,15 +75,15 @@ const SingleChat = (props) => {
             </View>
             <FlatList
                 style={{ flex: 1}}
-                data={Data}
+                data={msg}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index}
                 inverted
                 renderItem={({ item }) => {
                     return (
                         <MsgComponent
-                            sender={item.type == "sender"}
-                            massage={item.message}
+                            sender={item.sender_id === user._id}
+                            message={item.content}
                             item={item}
                         />
                     )
@@ -134,8 +115,6 @@ const SingleChat = (props) => {
                         placeholder = "Type a message"
                         placeholderTextColor = {'gray'}
                         multiline = {true}
-                        value={msg}
-                        onChangeText={(val)=>setMsg(val)}
                     />
 
                 <TouchableOpacity
