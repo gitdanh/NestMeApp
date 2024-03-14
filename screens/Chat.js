@@ -1,75 +1,107 @@
-import React, {useState}  from 'react';
+import React, { useEffect, useState, useRef }  from 'react';
 import { View, FlatList, StatusBar, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
 import { ListItem, Avatar } from 'react-native-elements';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconFeather from "react-native-vector-icons/Feather";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-const listData = [
-  {
-    name: 'Amy Farha',
-    avatar_url:
-      'https://images.pexels.com/photos/2811087/pexels-photo-2811087.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-    subtitle: 'Hey there, how are you?',
-  },
-  {
-    name: 'Chris Jackson',
-    avatar_url:
-      'https://images.pexels.com/photos/3748221/pexels-photo-3748221.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-    subtitle: 'Where are you?',
-  },
-  {
-    name: 'Jenifar Lawrence',
-    avatar_url:
-      'https://m.media-amazon.com/images/M/MV5BOTU3NDE5MDQ4MV5BMl5BanBnXkFtZTgwMzE5ODQ3MDI@._V1_.jpg',
-    subtitle: 'I am good, how are you?',
-  },
-  {
-    name: 'Tom Holland',
-    avatar_url:
-      'https://static.toiimg.com/thumb.cms?msid=80482429&height=600&width=600',
-    subtitle: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry',
-  },
-  {
-    name: 'Robert',
-    avatar_url:
-      'https://expertphotography.b-cdn.net/wp-content/uploads/2020/05/male-poses-squint.jpg',
-    subtitle: 'Where does it come from?',
-  },
-  {
-    name: 'downey junior',
-    avatar_url:
-      'https://www.apetogentleman.com/wp-content/uploads/2018/06/male-models-marlon.jpg',
-    subtitle: 'Where can I get some?',
-  },
-  {
-    name: 'Ema Watson',
-    avatar_url:
-      'https://images.unsplash.com/photo-1503104834685-7205e8607eb9?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8bW9kZWx8ZW58MHx8MHx8&ixlib=rb-1.2.1&w=1000&q=80',
-    subtitle: 'I am good, how are you?',
-  },
-  {
-    name: 'Chris Jackson',
-    avatar_url:
-      'https://images.pexels.com/photos/3748221/pexels-photo-3748221.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-    subtitle: ' If you use this site regularly and would like to help keep the site',
-  },
-  {
-    name: 'Jenifar Lawrence',
-    avatar_url:
-      'https://m.media-amazon.com/images/M/MV5BOTU3NDE5MDQ4MV5BMl5BanBnXkFtZTgwMzE5ODQ3MDI@._V1_.jpg',
-    subtitle: 'Why do we use it?',
-  },
-  {
-    name: 'Tom Holland',
-    avatar_url:
-      'https://static.toiimg.com/thumb.cms?msid=80482429&height=600&width=600',
-    subtitle: ' If you use this site regularly and would like to help keep the site',
-  },
-];
+import * as conversationService from '../services/conversationService';
+import  { UserSkeleton }  from '../components/UserSkeleton';
+import defaultAvatar from '../assets/default-avatar.jpg';
+
 function Chat() {
+  const [conversations, setConversations] = useState([]);
+  const user ={
+    _id: "65470a2248bc9d59982c2ddc"
+  }
   const [search, setSearch] = useState('')
     const navigation = useNavigation();
+    const [isLoadingSearch, setIsLoadingSearch] = useState(false);
+    const [isPetching, setIsPetching] = useState(false);
+    const [ unread , setUnread] = useState(false);
+    
+    const socketEventRef = useRef(false);
+    const searchCons = async (data) => {
+      try {
+          setIsLoadingSearch(true);
+          let result;
+          if(data===""){
+              result = await conversationService.getUserConversations(user._id);
+          } else{
+              if(data.trim() !== ""){
+                  result = await conversationService.searchCons(user._id, data.trim());
+              }    
+          }
+          // console.log(result);
+          if (result) {
+            setConversations(result)
+          }
+      } catch (err) {
+        console.log(err);
+      } finally {
+          setIsLoadingSearch(false);
+      }
+    };
+    const debounce = (fn, delay) => {
+      let timerId = null;
+    
+      return function (...args) {
+        clearTimeout(timerId);
+    
+        timerId = setTimeout(() => {
+          fn.apply(this, args);
+        }, delay);
+      };
+    };
+    
+    const debouncedSearchCons = debounce(searchCons, 500);
+
+
+    useEffect(() => {
+      if(user){
+          const fetchData = async () => {
+              try {
+                  setIsPetching(true);
+                  const data = await conversationService.getUserConversations(user._id);
+                  setConversations(data)
+                  // setConversation(data);
+              } catch (error) {
+                  setIsPetching(false);
+                  console.error(error);
+              } finally {
+                  setIsPetching(false);
+              }
+          };
+          fetchData();
+      }
+    }, []);
+
+    // useEffect(() => {
+    //     // console.log(socket, currentChat._id);
+    //     // console.log(checkCurrentChatIdRef.current);
+    //     if(socket){
+    //       // console.log("toi socket");
+    //       if (socket.current && !socketEventRef.current) {
+    //         socket.current.on("return-recieve", (data) => handleReturnChat(data));
+    //         socketEventRef.current = true;
+    //       }
+    //     }
+    //   }, [socket?.current]);
+    
+    // const handleReturnChat = async (data) => {
+    //     console.log(data);
+    //     // const result = await conversationService.getUserConversations(user._id);
+    //     // console.log(result);
+    //     // dispatch({ type: "SET_CONVERSATIONS", payload: result });
+    //     dispatch({
+    //       type: "ADD_CONVERSATION",
+    //       payload: data
+    //     });
+    // };
+    
+    // useEffect(() => {
+    //     console.log(conversations);
+    // }, [conversations]);
   
     const renderItems = ({ item }) => {
       return (
@@ -77,13 +109,15 @@ function Chat() {
           containerStyle={styles.listItem}
           onPress={() => navigation.navigate('SingleChat', { data: item })}
         >
-          <Avatar source={{ uri: item.avatar_url }} rounded title={item.name} size="medium" />
+          <Avatar source={item.img === ""
+                    ? defaultAvatar : { uri: item.img }} rounded title={item.name} size="medium" />
           <ListItem.Content>
-            <ListItem.Title style={styles.name}>{item.name}</ListItem.Title>
-            <ListItem.Subtitle style={styles.subtitle} numberOfLines={1}>
-              {item.subtitle}
+            <ListItem.Title style={item.unread ? { fontSize: 15, color: '#fff', fontWeight: "800"} : styles.name}>{item.name}</ListItem.Title>
+            <ListItem.Subtitle style={item.unread ? { fontSize: 13, color: '#fff', fontWeight: "800"} : styles.subtitle} numberOfLines={1}>
+              {item.lastMsg}
             </ListItem.Subtitle>
           </ListItem.Content>
+          {item.unread ? (<View style={{ width: 10, height: 10, marginRight: 10, borderRadius: 50, backgroundColor: "#0095f6"}}></View>):null}
         </ListItem>
       );
     };
@@ -131,17 +165,21 @@ function Chat() {
             }}
             placeholder = "Searching.."
             placeholderTextColor = {'white'}
-            multiline = {true}
-            value={search}
-            onChangeText={(val)=>setSearch(val)}
+            onChangeText={data => debouncedSearchCons(data)}
           />
         </View>
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          keyExtractor={(item, index) => index.toString()}
-          data={listData}
-          renderItem={renderItems}
-        />
+        {isLoadingSearch ? ( <UserSkeleton/>) :
+          (  !isPetching ? (
+            conversations && conversations?.length > 0 ?
+            <FlatList
+              showsVerticalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()}
+              data={conversations}
+              renderItem={renderItems}
+            /> : (<View style={{flex: 1, alignItems: "center"}}> 
+            <Text style={{ color: "#A8A8A8", fontWeight: "500", fontSize: 14 }}>No messages</Text>
+          </View>)) : ( <UserSkeleton/>))
+        }
         <TouchableOpacity style={styles.button} onPress={navigateToAllUser}>
           <Icon color="#fff" size={20} name="users" />
         </TouchableOpacity>
@@ -166,7 +204,7 @@ function Chat() {
     },
     subtitle: {
       fontSize: 12,
-      color: '#fff',
+      color: '#A8A8A8',
     },
     button: {
       position: 'absolute',

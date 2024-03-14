@@ -13,7 +13,8 @@ import { setAccessToken } from "../../store/redux/slices/authSlice";
 import PrimaryButton from "../../components/button/PrimaryButton";
 import { container, form } from "../../styles/authStyle";
 import useHttpClient from "../../axios/public-http-hook";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRefreshToken } from "../../axios/refresh-token";
 const logo = require("../../assets/logo-white.png");
 
 const UsersCanLogin = [
@@ -38,11 +39,9 @@ export default function Login(props) {
   };
 
   const onSignIn = async () => {
-    const url = "/auth/login";
-
     try {
       const response = await pulicHttpRequest.publicRequest(
-        "/auth/login",
+        "/auth/mlogin",
         "post",
         formData,
         { headers: { "Content-type": "application/json" } }
@@ -52,6 +51,7 @@ export default function Login(props) {
       }
 
       dispatch(setAccessToken(response.data.accessToken));
+      AsyncStorage.setItem('refreshToken', response.data.refreshToken);
     } catch (error) {
       Alert.alert("Lỗi", error.message);
     }
