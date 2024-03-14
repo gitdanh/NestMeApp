@@ -33,6 +33,10 @@ function Profile(props) {
     getProfileInfo();
   }, [usernameView]);
 
+  useEffect(() => {
+    setUsernameView(isOwnProfile ? authUsername : username);
+  }, [isOwnProfile, username]);
+
   return (
     <>
       <StatusBar style="light" />
@@ -47,7 +51,7 @@ function Profile(props) {
             friendsCount={userData?.friends_count}
             friendRequestsCount={userData?.friend_requests_count}
           />
-          <ProfilePosts username={userData?.username}/>
+          <ProfilePosts username={userData?.username} />
         </View>
       )}
     </>

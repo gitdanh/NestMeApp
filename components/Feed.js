@@ -1,21 +1,47 @@
-import React, { forwardRef } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import React, { forwardRef, useEffect, useState } from "react";
+import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
 import { getAvatarSource } from "../utils/getImageSource";
+import { useNavigation } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 
 const Feed = forwardRef(({ post }, ref) => {
+  const authUsername = useSelector((state) => state.authenticate.username);
+  const [profile, setProfile] = useState(
+    authUsername === post.creator.username ? "Profile" : "OtherProfile"
+  );
+  const navigator = useNavigation();
+
+  useEffect(() => {
+    setProfile(
+      authUsername === post.creator.username ? "Profile" : "OtherProfile"
+    );
+  }, [post.creator.username]);
+
+  const onPressCreatorHandler = () => {
+    navigator.navigate(profile, {
+      isOwnProfile: false,
+      username: post.creator.username,
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
         <View style={styles.headerLeftWrapper}>
-          <Image
-            style={styles.profileThumb}
-            source={getAvatarSource(post.creator.profile_picture)}
-          />
-          <Text style={styles.headerTitle}> {post.creator.username}</Text>
+          <Pressable onPress={onPressCreatorHandler}>
+            <Image
+              style={styles.profileThumb}
+              source={getAvatarSource(post.creator.profile_picture)}
+            />
+          </Pressable>
+          <Text style={styles.headerTitle} onPress={onPressCreatorHandler}>
+            {" "}
+            {post.creator.username}
+          </Text>
         </View>
         <IconEntypo color={"#ffff"} size={20} name="dots-three-vertical" />
       </View>

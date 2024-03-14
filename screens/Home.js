@@ -6,6 +6,7 @@ import {
   ScrollView,
   Image,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import Feed from "../components/Feed";
 import Footer from "../components/Footer";
@@ -104,6 +105,7 @@ function Home(props) {
             onEndReachedThreshold={0.1}
           />
         )}
+        {postsLoading && page > 1 && <ActivityIndicator />}
       </View>
     </>
   );

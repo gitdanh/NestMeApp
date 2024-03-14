@@ -11,13 +11,13 @@ import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
 import { store } from "./store/redux/store";
 import { useSelector, useDispatch } from "react-redux";
-import { Alert, SafeAreaView } from "react-native";
+import { ActivityIndicator, Alert, SafeAreaView } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import usePrivateHttpClient from "./axios/private-http-hook";
 import { setLoginInfo } from "./store/redux/slices/authSlice";
 import useRefreshToken from "./axios/refresh-token";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -92,6 +92,7 @@ function AuthenticatedScreen() {
           // You can return any component that you like here!
           return <Ionicons name={iconName} size={size} color={color} />;
         },
+        unmountOnBlur: true,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
@@ -106,21 +107,29 @@ function AuthenticatedScreen() {
         component={SingleChat}
         options={{ tabBarButton: () => null, tabBarLabel: () => null }}
       />
+      <Tab.Screen
+        name="OtherProfile"
+        component={ProfileScreen}
+        options={{ tabBarButton: () => null, tabBarLabel: () => null }}
+      />
     </Tab.Navigator>
   );
 }
 
 function Navigation() {
+  const [refreshing, setRefreshing] = useState(true);
   const { refresh } = useRefreshToken();
   const accessToken = useSelector((state) => state.authenticate.accessToken);
 
   useEffect(() => {
     async function refreshAccessToken() {
       try {
-        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        const refreshToken = await AsyncStorage.getItem("refreshToken");
         await refresh(refreshToken);
+        setRefreshing(false);
       } catch (error) {
-        console.error('Error refreshing access token:', error);
+        setRefreshing(false);
+        console.error("Error refreshing access token:", error);
       }
     }
     refreshAccessToken();
@@ -128,7 +137,13 @@ function Navigation() {
 
   return (
     <NavigationContainer>
-      {accessToken === null ? <AuthScreen /> : <AuthenticatedScreen />}
+      {refreshing ? (
+        <ActivityIndicator size={50} />
+      ) : accessToken === null ? (
+        <AuthScreen />
+      ) : (
+        <AuthenticatedScreen />
+      )}
     </NavigationContainer>
   );
 }
