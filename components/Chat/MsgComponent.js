@@ -7,6 +7,9 @@ import { getAvatarSource } from "../../utils/getImageSource";
 
 const MsgComponent = (props) => {
     const { sender, item, sendTime } = props;
+    // useEffect(() => {
+    //     console.log(item)
+    //   }, []);
     return (
         <Pressable
             style={{ marginVertical: 0 }}
@@ -26,6 +29,7 @@ const MsgComponent = (props) => {
                     
 
                     <TimeDelivery
+                        style={{alignSelf: sender ? 'flex-end' : 'flex-start',}}
                         sender={sender}
                         item={item}
                     />
@@ -74,7 +78,7 @@ const styles = StyleSheet.create({
         resizeMode: 'cover',
         borderColor: "#212121",
         borderWidth: 1,
-        marginLeft: 15,
+        marginLeft: 10,
       },
 });
 

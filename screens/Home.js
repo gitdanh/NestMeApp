@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Text,
   View,
@@ -15,15 +15,36 @@ import IconAnt from "react-native-vector-icons/AntDesign";
 import IconFeather from "react-native-vector-icons/Feather";
 import { StatusBar } from "expo-status-bar";
 import usePrivateHttpClient from "../axios/private-http-hook";
+import { useSelector, useDispatch} from "react-redux";
+import { setSocket } from "../store/redux/slices/chatSlice";
+import { io } from "socket.io-client";
+import { current } from "@reduxjs/toolkit";
 
 function Home(props) {
   const { privateRequest } = usePrivateHttpClient();
+  const userId = useSelector((state) => state.authenticate.userId);
+  const dispatch = useDispatch();
 
+  const socket = useRef();
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMorePost, setHasMorePost] = useState(true);
   const [postsLoading, setPostsLoading] = useState(false);
   const [isEndReached, setIsEndReached] = useState(false);
+
+  useEffect(() => {
+    if (userId) {
+      if (socket.current == null) {
+        socket.current = io(process.env.REACT_APP_SERVER_BASE_URL);
+        socket.current.on("connect", () => {
+          // yêu cầu kết nối vào 1 socket mới
+          console.log(`You connected with socket`, Date().split("G")[0]);
+        }); // sự kiện mở kết nối socket
+        socket.current.emit("add-user", userId);
+        dispatch(setSocket(socket));
+      }
+    }
+  }, [userId]);
 
   const handleEndReached = () => {
     if (!postsLoading && hasMorePost) {
@@ -118,7 +139,7 @@ export const styles = StyleSheet.create({
     display: "flex",
     flex: 1,
     backgroundColor: "black",
-    padding: "0 20",
+    paddingVertical: 20,
   },
   header: {
     display: "flex",

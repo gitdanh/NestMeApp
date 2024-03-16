@@ -17,7 +17,7 @@ const TimeDelivery = (props) => {
                 fontSize: 7,
                 color: sender ? 'white' : 'gray'
             }}>
-                {moment(item.send_time).format('LLL')}
+                {moment(item.createAt).format('LLL')}
             </Text>
                 <Icon style={{color: item.seen ? 'black' : 'white' , fontSize: 15, marginLeft: 5}} size={20} name="checkmark-done" />
         </View>

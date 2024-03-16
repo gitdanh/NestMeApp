@@ -43,11 +43,13 @@ function AuthenticatedScreen() {
   const getLoginUserInfo = async () => {
     try {
       const response = await privateRequest("/users/auth-user");
+      console.log(response.data)
       if (response) {
         dispatch(
           setLoginInfo({
             username: response.data.user.username,
             userId: response.data.user._id,
+            avatar: response.data.user.profile_picture,
           })
         );
       }

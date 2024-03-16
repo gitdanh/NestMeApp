@@ -8,11 +8,16 @@ import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommun
 import * as conversationService from '../services/conversationService';
 import  { UserSkeleton }  from '../components/UserSkeleton';
 import defaultAvatar from '../assets/default-avatar.jpg';
+import { useSelector, useDispatch} from "react-redux";
+import { setAccessToken } from "../store/redux/slices/authSlice";
 
 function Chat() {
   const [conversations, setConversations] = useState([]);
+  
+  const userId = useSelector((state) => state.authenticate.userId);
+  const socket = useSelector((state) => state.chat.socket);
   const user ={
-    _id: "65470a2248bc9d59982c2ddc"
+    _id: userId
   }
   const [search, setSearch] = useState('')
     const navigation = useNavigation();
@@ -102,15 +107,56 @@ function Chat() {
     // useEffect(() => {
     //     console.log(conversations);
     // }, [conversations]);
-  
+
+    useEffect(() => {
+      if(socket){
+          socket.current.on("getOnlineUser", (data) => {
+            console.log("toi day chua");
+            setConversations((prevConversations) => {
+              return prevConversations.map((con) => {
+                if (con.userIds == data.user_id) {
+                  return { ...con, online: true };
+                } else {
+                  return con;
+                }
+              });
+            });
+          });
+      }
+    }, [socket?.current]);
+
+    useEffect(() => {
+        if(socket){
+            socket.current.on("getOfflineUser", (data) => {
+              console.log("toi day chua");
+              setConversations((prevConversations) => {
+                return prevConversations.map((con) => {
+                  if (con.userIds == data.user_id) {
+                    return { ...con, online: false };
+                  } else {
+                    return con;
+                  }
+                });
+              });
+            });
+        }
+    }, [socket?.current]);
+
     const renderItems = ({ item }) => {
+      
       return (
         <ListItem
           containerStyle={styles.listItem}
           onPress={() => navigation.navigate('SingleChat', { data: item })}
         >
-          <Avatar source={item.img === ""
-                    ? defaultAvatar : { uri: item.img }} rounded title={item.name} size="medium" />
+          <View>
+            <Avatar source={item.img === ""
+                      ? defaultAvatar : { uri: item.img }} rounded title={item.name} size="medium" />
+            {}
+            {item.online ? 
+            <View style={{position: "absolute", width: 12, height: 12, borderRadius: 50, backgroundColor: "green", left: "75%", bottom: 2}}></View>
+            : null}
+          </View>
           <ListItem.Content>
             <ListItem.Title style={item.unread ? { fontSize: 15, color: '#fff', fontWeight: "800"} : styles.name}>{item.name}</ListItem.Title>
             <ListItem.Subtitle style={item.unread ? { fontSize: 13, color: '#fff', fontWeight: "800"} : styles.subtitle} numberOfLines={1}>
@@ -128,10 +174,10 @@ function Chat() {
   
     return (
       <View style={styles.container}>
-        <View style={{padding: 10}}>
+        <View style={{padding: 10}} >
           <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
             <View style={{flexDirection: 'row'}}>
-              <IconMaterialCommunityIcons color={"white"} size={30} name="keyboard-backspace" style={{marginRight: 10}} />
+              <IconMaterialCommunityIcons color={"white"} size={30} name="keyboard-backspace" style={{marginRight: 10}} onPress={()=> navigation.navigate('Home')}/>
               <Text style={{fontSize: 24, fontWeight: '500', color: 'white'}}> duongw</Text>
             </View>
               

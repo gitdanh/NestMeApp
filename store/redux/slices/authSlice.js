@@ -17,6 +17,7 @@ const tokenSlice = createSlice({
     setLoginInfo: (state, action) => {
       state.username = action.payload.username;
       state.userId = action.payload.userId;
+      state.avatar = action.payload.avatar;
     },
   },
 });
