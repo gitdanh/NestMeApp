@@ -60,7 +60,6 @@ function AuthenticatedScreen() {
   const getLoginUserInfo = async () => {
     try {
       const response = await privateRequest("/users/auth-user");
-
       if (response) {
         dispatch(
           setLoginInfo({

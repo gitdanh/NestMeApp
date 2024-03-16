@@ -111,7 +111,6 @@ function Chat() {
     useEffect(() => {
       if(socket){
           socket.current.on("getOnlineUser", (data) => {
-            console.log("toi day chua");
             setConversations((prevConversations) => {
               return prevConversations.map((con) => {
                 if (con.userIds == data.user_id) {
@@ -128,7 +127,6 @@ function Chat() {
     useEffect(() => {
         if(socket){
             socket.current.on("getOfflineUser", (data) => {
-              console.log("toi day chua");
               setConversations((prevConversations) => {
                 return prevConversations.map((con) => {
                   if (con.userIds == data.user_id) {
@@ -140,6 +138,27 @@ function Chat() {
               });
             });
         }
+    }, [socket?.current]);
+
+    useEffect(() => {
+      if(socket){
+          socket.current.on("msg-recieve", (data) => {
+            setConversations((prevConversations) => {
+              return prevConversations.map((con) => {
+                if (con._id == data.conversationId) {
+                  let lastmsg;
+                  if(data?.media.length > 0)
+                    lastmsg = "Image";
+                  else
+                    lastmsg = data.content;
+                  return { ...con, lastMsg: lastmsg, unread: true };
+                } else {
+                  return con;
+                }
+              });
+            });
+          });
+      }
     }, [socket?.current]);
 
     const renderItems = ({ item }) => {

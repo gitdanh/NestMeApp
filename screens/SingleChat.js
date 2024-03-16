@@ -39,28 +39,27 @@ const SingleChat = (props) => {
   const [hasMoreMsg, setHasMoreMsg] = useState(true);
   const [isEndReached, setIsEndReached] = useState(false);
 
-  const handleEndReached = () => {
-    if (hasMoreMsg) {
-      setPage((prev) => prev + 1);
-      setIsEndReached(true);
-    }
-  };
 
-  const getMessages = useCallback(async () => {
-    try {
-      const response = await messageService.getMessages(
-        data._id,
-        msg?.length,
-        user._id
-      );
+    // Get messages ........................................
 
-      if (response) {
-        setMsg((prev) => [...prev, ...response.reverse()]);
-      }
-    } catch (err) {
-      console.error("messages ", err);
-    }
-  }, [page]);
+    const handleEndReached = () => {
+        if (hasMoreMsg) {
+          setPage((prev) => prev + 1);
+          setIsEndReached(true);
+        }
+      };
+    
+    const getMessages = useCallback(async () => {
+        try {
+            const response = await messageService.getMessages(data._id, msg?.length, user._id);
+        
+            if (response) {
+                setMsg((prev) => [...prev, ...response.reverse()]);
+            }
+        } catch (err) {
+            console.error("messages ", err);
+        }
+    }, [page]);
 
   const lastMessageRef = useCallback(
     (index) => {
@@ -83,31 +82,29 @@ const SingleChat = (props) => {
     _id: userId,
   };
 
-  const [msg, setMsg] = useState([]);
-  const [disabled, setdisabled] = useState(false);
-  const [fetching, setFetching] = useState(false);
-  useEffect(() => {
-    setFetching(true);
-    const fetchData = async () => {
-      try {
-        if (data._id && user._id) {
-          const result = await messageService.getMessages(
-            data._id,
-            0,
-            user._id
-          );
-          setMsg(result.reverse());
-        }
-      } catch (error) {
-        console.log(error);
-        setFetching(false);
-      } finally {
-        setFetching(false);
-      }
-    };
+    const [msg, setMsg] = useState([]);
+    const [disabled, setdisabled] = useState(false);
+    const [fetching, setFetching] = useState(false);
+    useEffect(() => {
+        setFetching(true);
+        const fetchData = async () => {
+          try {
+            if(data._id && user._id){
+              const result = await messageService.getMessages(data._id, 0, user._id);
+              setMsg(result.reverse());
+            }
+          } catch (error) {
+            console.log(error);
+            setFetching(false);
+          } finally {
+            setFetching(false);
+          }
+        };
+    
+        fetchData();
+    }, [data._id]);
 
-    fetchData();
-  }, [data._id]);
+    // sockets ........................................
 
   useEffect(() => {
     if (data) {
@@ -119,34 +116,69 @@ const SingleChat = (props) => {
     }
   }, [socket?.current, data]);
 
-  useEffect(() => {
-    if (data) {
-      socket.current.on("getOfflineUser", (off) => {
-        if (data.userIds.includes(off.user_id)) {
-          setIsOnline(false);
-          setLastOnl(new Date().toISOString());
+    useEffect(() => {
+        if(data){
+            socket.current.on("getOfflineUser", (off) => {
+                if(data.userIds.includes(off.user_id)){
+                    setIsOnline(false);
+                    setLastOnl(new Date().toISOString());
+                }
+            });
         }
-      });
-    }
-  }, [socket?.current, data]);
+    }, [socket?.current, data]);
 
-  useEffect(() => {
-    if (socket) {
-      if (socket.current && !socketEventRef.current && !isEventRegistered) {
-        socket.current.on("msg-recieve", (msg) => handleMsgRecieve(data, msg));
-        socketEventRef.current = true;
-        setIsEventRegistered(true);
-      }
-    }
-  }, [data._id, socket.current, isEventRegistered]);
 
-  const handleMsgRecieve = (c, msgRecieve) => {
-    if (c) {
-      if (msgRecieve.conversationId == c._id) {
-        setMsg((prevMsg) => [msgRecieve, ...prevMsg]);
-      }
-    }
-  };
+    useEffect(() => {
+        if(socket){
+            if (socket.current && !socketEventRef.current && !isEventRegistered) {
+                socket.current.on("msg-recieve", (msg) => handleMsgRecieve(data, msg));
+                socketEventRef.current = true;
+                setIsEventRegistered(true);
+            }
+        }
+    }, [data._id, socket.current, isEventRegistered]);
+    
+    const handleMsgRecieve = (c, msgRecieve) => {
+        if (c) {
+            if (msgRecieve.conversationId === c._id) {
+                setMsg((prevMsg) => [msgRecieve, ...prevMsg]);
+                const reader = {
+                    conversation_id: c._id, // Sửa thành 'c._id' thay vì 'data._id'
+                    reader_id: user._id,
+                };
+                (async () => {
+                    try {
+                        await messageService.addReader(reader);
+                    } catch (err) {
+                        console.log(err);
+                    }
+                })();
+            }
+        }
+    };
+
+    // readers ........................................
+
+    useEffect(() => {
+        const addReader = async () => {
+            const reader = {
+                conversation_id: data._id,
+                reader_id: user._id,
+            }
+            if (data.unread) {
+                try {
+                    await messageService.addReader(reader);
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+        };
+    
+        addReader();
+    }, [data._id]);
+
+    // Send messages ........................................
+
 
   return (
     <View style={styles.container}>
