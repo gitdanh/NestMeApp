@@ -11,13 +11,14 @@ import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
 import { store } from "./store/redux/store";
 import { useSelector, useDispatch } from "react-redux";
-import { ActivityIndicator, Alert, SafeAreaView } from "react-native";
+import { ActivityIndicator, Alert, Image, SafeAreaView } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useCallback, useEffect, useState } from "react";
 import usePrivateHttpClient from "./axios/private-http-hook";
 import { setLoginInfo } from "./store/redux/slices/authSlice";
 import useRefreshToken from "./axios/refresh-token";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAvatarSource } from "./utils/getImageSource";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,14 +37,30 @@ function AuthScreen() {
   );
 }
 
+function MainScreen() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+      initialRouteName="TabScreens"
+    >
+      <Stack.Screen name="TabScreens" component={AuthenticatedScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="SingleChat" component={SingleChat} />
+    </Stack.Navigator>
+  );
+}
+
 function AuthenticatedScreen() {
   const { privateRequest } = usePrivateHttpClient();
   const dispatch = useDispatch();
+  const [avatar, setAvatar] = useState("");
 
   const getLoginUserInfo = async () => {
     try {
       const response = await privateRequest("/users/auth-user");
-      console.log(response.data)
+
       if (response) {
         dispatch(
           setLoginInfo({
@@ -52,6 +69,7 @@ function AuthenticatedScreen() {
             avatar: response.data.user.profile_picture,
           })
         );
+        setAvatar(response.data.user.profile_picture);
       }
     } catch (err) {
       Alert.alert("Error get login username", err.message);
@@ -86,7 +104,13 @@ function AuthenticatedScreen() {
           if (rn === "Home") {
             iconName = focused ? "home" : "home-outline";
           } else if (rn === "Profile") {
-            iconName = focused ? "list" : "list-outline";
+            return (
+              <Image
+                style={{ width: 26, height: 26, borderRadius: 50 }}
+                source={getAvatarSource(avatar)}
+              />
+            );
+            //iconName = focused ? "list" : "list-outline";
           } else if (rn === "Chat") {
             iconName = focused ? "settings" : "settings-outline";
           }
@@ -98,17 +122,17 @@ function AuthenticatedScreen() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Chat" component={ChatScreen} />
+      {/* <Tab.Screen name="Chat" component={ChatScreen} /> */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         initialParams={{ isOwnProfile: true, username: "" }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="SingleChat"
         component={SingleChat}
         options={{ tabBarButton: () => null, tabBarLabel: () => null }}
-      />
+      /> */}
       <Tab.Screen
         name="OtherProfile"
         component={ProfileScreen}
@@ -144,7 +168,7 @@ function Navigation() {
       ) : accessToken === null ? (
         <AuthScreen />
       ) : (
-        <AuthenticatedScreen />
+        <MainScreen />
       )}
     </NavigationContainer>
   );

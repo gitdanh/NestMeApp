@@ -15,7 +15,7 @@ import IconAnt from "react-native-vector-icons/AntDesign";
 import IconFeather from "react-native-vector-icons/Feather";
 import { StatusBar } from "expo-status-bar";
 import usePrivateHttpClient from "../axios/private-http-hook";
-import { useSelector, useDispatch} from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { setSocket } from "../store/redux/slices/chatSlice";
 import { io } from "socket.io-client";
 import { current } from "@reduxjs/toolkit";
@@ -107,7 +107,12 @@ function Home(props) {
               name="hearto"
               style={{ marginRight: 10 }}
             />
-            <IconAnt color={"#ffff"} size={25} name="message1" />
+            <IconAnt
+              color={"#ffff"}
+              size={25}
+              name="message1"
+              onPress={() => props.navigation.navigate("Chat")}
+            />
           </View>
         </View>
         {posts.length > 0 && (
