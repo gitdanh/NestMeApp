@@ -29,6 +29,7 @@ const SingleChat = (props) => {
   const navigation = useNavigation();
   const { data } = props.route.params;
   const userId = useSelector((state) => state.authenticate.userId);
+  const avatar = useSelector((state) => state.authenticate.avatar);
   const socket = useSelector((state) => state.chat.socket);
   const [isOnline, setIsOnline] = useState(data.online);
   const [lastOnl, setLastOnl] = useState(data.last_online);
@@ -80,6 +81,7 @@ const SingleChat = (props) => {
 
   const user = {
     _id: userId,
+    avatar: avatar,
   };
 
     const [msg, setMsg] = useState([]);
@@ -104,7 +106,7 @@ const SingleChat = (props) => {
         fetchData();
     }, [data._id]);
 
-    // sockets ........................................
+  // sockets ........................................
 
   useEffect(() => {
     if (data) {
@@ -116,69 +118,167 @@ const SingleChat = (props) => {
     }
   }, [socket?.current, data]);
 
-    useEffect(() => {
-        if(data){
-            socket.current.on("getOfflineUser", (off) => {
-                if(data.userIds.includes(off.user_id)){
-                    setIsOnline(false);
-                    setLastOnl(new Date().toISOString());
-                }
-            });
-        }
-    }, [socket?.current, data]);
+  useEffect(() => {
+      if(data){
+          socket.current.on("getOfflineUser", (off) => {
+              if(data.userIds.includes(off.user_id)){
+                  setIsOnline(false);
+                  setLastOnl(new Date().toISOString());
+              }
+          });
+      }
+  }, [socket?.current, data]);
 
 
-    useEffect(() => {
-        if(socket){
-            if (socket.current && !socketEventRef.current && !isEventRegistered) {
-                socket.current.on("msg-recieve", (msg) => handleMsgRecieve(data, msg));
-                socketEventRef.current = true;
-                setIsEventRegistered(true);
-            }
-        }
-    }, [data._id, socket.current, isEventRegistered]);
+  useEffect(() => {
+      if(socket){
+          if (socket.current && !socketEventRef.current && !isEventRegistered) {
+              socket.current.on("msg-recieve", (msg) => handleMsgRecieve(data, msg));
+              socketEventRef.current = true;
+              setIsEventRegistered(true);
+          }
+      }
+  }, [data._id, socket.current, isEventRegistered]);
     
-    const handleMsgRecieve = (c, msgRecieve) => {
-        if (c) {
-            if (msgRecieve.conversationId === c._id) {
-                setMsg((prevMsg) => [msgRecieve, ...prevMsg]);
-                const reader = {
-                    conversation_id: c._id, // Sửa thành 'c._id' thay vì 'data._id'
-                    reader_id: user._id,
-                };
-                (async () => {
-                    try {
-                        await messageService.addReader(reader);
-                    } catch (err) {
-                        console.log(err);
-                    }
-                })();
-            }
-        }
-    };
-
-    // readers ........................................
-
-    useEffect(() => {
-        const addReader = async () => {
+  const handleMsgRecieve = (c, msgRecieve) => {
+    if (c) {
+        if (msgRecieve.conversationId === c._id) {
+            setMsg((prevMsg) => [msgRecieve, ...prevMsg]);
             const reader = {
-                conversation_id: data._id,
+                conversation_id: c._id, // Sửa thành 'c._id' thay vì 'data._id'
                 reader_id: user._id,
-            }
-            if (data.unread) {
+            };
+            (async () => {
                 try {
                     await messageService.addReader(reader);
                 } catch (err) {
                     console.log(err);
                 }
+            })();
+        }
+    }
+  };
+
+  // readers ........................................
+
+  useEffect(() => {
+      const addReader = async () => {
+          const reader = {
+              conversation_id: data._id,
+              reader_id: user._id,
+          }
+          if (data.unread) {
+              try {
+                  await messageService.addReader(reader);
+              } catch (err) {
+                  console.log(err);
+              }
+          }
+      };
+  
+      addReader();
+  }, [data._id]);
+
+  // Send messages ........................................
+  const [text, setText] = useState("");
+  const [img, setImg] = useState([])
+  const [sending, setSending] = useState(false);
+
+  const handleSendMessage = async () => {
+    if((text.trim() !== "" || img.length != 0) && sending == false){
+      // const promises = img.map((image) => {
+      //   const name = Date.now();
+      //   const storageRef  = ref(storage,`images/${name}`);
+      //   const uploadTask = uploadBytesResumable(storageRef, image.file);
+      //   return new Promise((resolve, reject) => {
+      //     uploadTask.on('state_changed', 
+      //     (snapshot) => {
+      //         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      //         setProgress(progress);
+      //       },
+      //       (error) => {
+      //         console.log(error);
+      //         reject(error);
+      //       },
+      //       () => {
+      //         // console.log("Toi r");
+      //         getDownloadURL(uploadTask.snapshot.ref)
+      //         .then((url) => {
+      //           // console.log(url);
+      //           resolve(url);
+      //         })
+      //         .catch((error) => {
+      //           console.log(error);
+      //           reject(error);
+      //         });
+      //       }
+      //     );
+      //   });
+      // });
+      
+      try{
+        setSending(true);
+        // const urls = await Promise.allSettled(promises)
+        // const urlStrings = urls.map((url) => url.value.toString());
+        urlStrings = [];
+        try{
+            const newMessage = {
+            conversationId: data._id,
+            recieve_ids: data.userIds,
+            sender_id: user._id,
+            img: user.avatar,
+            content: text,
+            media: urlStrings,
+            removed: false,
+          };
+          
+          const result = await messageService.sendMessage(newMessage);
+          const savedMessage = {_id: result._id, ...newMessage};
+          if(data?.is_deleted && data?.is_deleted.find(obj => obj.user_id === data.userIds[0] && obj.deleted === true)){
+            const data = {
+              conversationId: data._id,
+              userId: data.userIds[0],
             }
-        };
-    
-        addReader();
-    }, [data._id]);
+            let last_msg;
+            if(result?.media.length > 0){
+              last_msg = "Image";
+            } else{
+              last_msg = result?.content;
+            }
+            console.log(text, last_msg);
+            const con = {_id: data._id, userIds: [user._id], name: user.full_name, img: user.profile_picture, 
+              msg_id: result._id, lastMsg: last_msg, unread: true, online: true, last_online: data.last_online,
+              is_deleted: data.is_deleted,recieve_ids: data.userIds,
+            };
+            console.log(con);
+            conversationService.returnConversation(data);
+            socket.current.emit("return-chat", con);
+          } else{
+            socket.current.emit("send-msg", savedMessage)
+          }
 
-    // Send messages ........................................
-
+          
+          // dispatch({ type: "FIRST_CONVERSATION", payload: currentChat });
+          setMsg((prevMsg) => [savedMessage, ...prevMsg]);
+          // dispatch({type: "ADD_MESSAGE", payload: savedMessage,
+          //   fromSelf: true,
+          // })
+          
+          if (result !== null) {
+            setText("") ;
+            setImg([]);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setSending(false);
+      }
+      // await ReturnHeight();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -307,11 +407,13 @@ const SingleChat = (props) => {
               placeholder="Type a message"
               placeholderTextColor={"gray"}
               multiline={true}
+              value={text}
+              onChangeText={(val) => setText(val)}
             />
 
             <TouchableOpacity
               disabled={disabled}
-              //    onPress={sendMsg}
+              onPress={handleSendMessage}
             >
               <Icon color="#fff" size={20} name="paper-plane-sharp" />
             </TouchableOpacity>
