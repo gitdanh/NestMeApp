@@ -92,7 +92,7 @@ function AuthenticatedScreen() {
         tabBarActiveTintColor: "#FFFFFF",
         tabBarInactiveTintColor: "#888888",
         tabBarLabelStyle: {
-          paddingBottom: 10,
+          // paddingBottom: 10,
           fontSize: 10,
         },
         headerShown: false,

@@ -1,5 +1,14 @@
-import React, { forwardRef, useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import React, { forwardRef, useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Pressable,
+  FlatList,
+  useWindowDimensions,
+  Alert,
+} from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconEntypo from "react-native-vector-icons/Entypo";
@@ -15,6 +24,8 @@ const Feed = forwardRef(({ post }, ref) => {
   );
   const navigator = useNavigation();
 
+  const { width } = useWindowDimensions();
+
   useEffect(() => {
     setProfile(
       authUsername === post.creator.username ? "Profile" : "OtherProfile"
@@ -27,6 +38,15 @@ const Feed = forwardRef(({ post }, ref) => {
       username: post.creator.username,
     });
   };
+
+  const [currentImageView, setCurrentImageView] = useState(0);
+
+  const onViewableItemsChanged = useRef((item) => {
+    const index = item.viewableItems[0].index;
+    setCurrentImageView(index);
+  });
+
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
 
   return (
     <View style={styles.container}>
@@ -45,9 +65,33 @@ const Feed = forwardRef(({ post }, ref) => {
         </View>
         <IconEntypo color={"#ffff"} size={20} name="dots-three-vertical" />
       </View>
-      <View>
-        <Image style={styles.feedImage} source={{ uri: post.media[0] }} />
-      </View>
+      {post.media.length > 1 ? (
+        <FlatList
+          data={post.media}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item, i) => i.toString()}
+          renderItem={({ item }) => (
+            <View style={{ marginHorizontal: 10 }}>
+              <Image
+                style={{ height: width - 20, width: width - 20 }}
+                source={{ uri: item }}
+              />
+            </View>
+          )}
+          onViewableItemsChanged={onViewableItemsChanged.current}
+          viewabilityConfig={viewabilityConfig.current}
+        />
+      ) : (
+        <View style={{ marginHorizontal: 10 }}>
+          <Image
+            style={{ height: width - 20, width: width - 20 }}
+            source={{ uri: post.media[0] }}
+          />
+        </View>
+      )}
+
       <View style={styles.feedImageFooter}>
         <View style={styles.feddimageFooterLeftWrapper}>
           <IconAnt
@@ -55,6 +99,7 @@ const Feed = forwardRef(({ post }, ref) => {
             size={25}
             name="hearto"
             style={{ marginRight: 10 }}
+            //onPress={() => Alert.alert("Press")}
           />
           <Icon
             color={"#ffff"}
@@ -65,6 +110,33 @@ const Feed = forwardRef(({ post }, ref) => {
           <IconFeather color={"#ffff"} size={25} name="send" />
         </View>
         <Icon color={"#ffff"} size={25} name="bookmark-o" />
+        {post.media.length > 1 && (
+          <View
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              position: "absolute",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: -1,
+            }}
+          >
+            {post.media.map((item, i) => {
+              return (
+                <View
+                  key={i}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: currentImageView === i ? "white" : "gray",
+                    marginHorizontal: 3,
+                  }}
+                />
+              );
+            })}
+          </View>
+        )}
       </View>
       {ref ? (
         <View ref={ref} style={styles.likesAndCommentsWrapper}>

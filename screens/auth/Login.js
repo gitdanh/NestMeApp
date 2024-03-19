@@ -13,7 +13,7 @@ import { setAccessToken } from "../../store/redux/slices/authSlice";
 import PrimaryButton from "../../components/button/PrimaryButton";
 import { container, form } from "../../styles/authStyle";
 import useHttpClient from "../../axios/public-http-hook";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRefreshToken } from "../../axios/refresh-token";
 const logo = require("../../assets/logo-white.png");
 
@@ -51,14 +51,14 @@ export default function Login(props) {
       }
 
       dispatch(setAccessToken(response.data.accessToken));
-      AsyncStorage.setItem('refreshToken', response.data.refreshToken);
+      AsyncStorage.setItem("refreshToken", response.data.refreshToken);
     } catch (error) {
       Alert.alert("Lỗi", error.message);
     }
   };
   return (
     // <ScrollView >
-    <KeyboardAvoidingView style={container.center} behavior="">
+    <KeyboardAvoidingView style={container.center} behavior="position">
       <View style={container.formCenter}>
         <View
           style={{

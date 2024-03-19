@@ -144,7 +144,7 @@ export const styles = StyleSheet.create({
     display: "flex",
     flex: 1,
     backgroundColor: "black",
-    paddingVertical: 20,
+    // paddingVertical: 20,
   },
   header: {
     display: "flex",
