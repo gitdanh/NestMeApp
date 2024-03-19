@@ -6,6 +6,7 @@ import LoginScreen from "./screens/auth/Login";
 import ProfileScreen from "./screens/Profile";
 import ChatScreen from "./screens/Chat";
 import SingleChat from "./screens/SingleChat";
+import NotifyScreen from "./screens/Notify";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
@@ -47,6 +48,7 @@ function MainScreen() {
     >
       <Stack.Screen name="TabScreens" component={AuthenticatedScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="Notify" component={NotifyScreen} />
       <Stack.Screen name="SingleChat" component={SingleChat} />
     </Stack.Navigator>
   );
