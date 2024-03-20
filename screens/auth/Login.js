@@ -57,8 +57,7 @@ export default function Login(props) {
     }
   };
   return (
-    // <ScrollView >
-    <KeyboardAvoidingView style={container.center} behavior="position">
+    <ScrollView style={container.center}>
       <View style={container.formCenter}>
         <View
           style={{
@@ -103,7 +102,6 @@ export default function Login(props) {
           Don't have an account? SignUp.
         </Text>
       </View>
-    </KeyboardAvoidingView>
-    // </ScrollView>
+    </ScrollView>
   );
 }
