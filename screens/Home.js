@@ -106,6 +106,7 @@ function Home(props) {
               size={25}
               name="hearto"
               style={{ marginRight: 10 }}
+              onPress={() => props.navigation.navigate("Notify")}
             />
             <IconAnt
               color={"#ffff"}

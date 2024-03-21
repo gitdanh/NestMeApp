@@ -36,6 +36,7 @@ const SingleChat = (props) => {
   const socketEventRef = useRef(false);
   const [isEventRegistered, setIsEventRegistered] = useState(false);
 
+  const [loadMore, setLoadMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMoreMsg, setHasMoreMsg] = useState(true);
   const [isEndReached, setIsEndReached] = useState(false);
@@ -52,13 +53,18 @@ const SingleChat = (props) => {
     
     const getMessages = useCallback(async () => {
         try {
+            setLoadMore(true);
             const response = await messageService.getMessages(data._id, msg?.length, user._id);
-        
+            const msgCount = response.length;
+            setHasMoreMsg(msgCount > 0 && msgCount === 20);
             if (response) {
                 setMsg((prev) => [...prev, ...response.reverse()]);
             }
         } catch (err) {
             console.error("messages ", err);
+            setLoadMore(false);
+        } finally {
+          setLoadMore(false);
         }
     }, [page]);
 
@@ -355,6 +361,7 @@ const SingleChat = (props) => {
         behavior="padding"
         enabled={Platform.OS === "ios"}
       >
+        {loadMore  && page > 1 && <ActivityIndicator />}
         <FlatList
           style={{ flex: 1 }}
           data={msg}
