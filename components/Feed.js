@@ -16,6 +16,7 @@ import IconFeather from "react-native-vector-icons/Feather";
 import { getAvatarSource } from "../utils/getImageSource";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
+import { favHeart, globalBlue } from "../utils/globalColors";
 
 const Feed = forwardRef(({ post }, ref) => {
   const authUsername = useSelector((state) => state.authenticate.username);
@@ -95,9 +96,9 @@ const Feed = forwardRef(({ post }, ref) => {
       <View style={styles.feedImageFooter}>
         <View style={styles.feddimageFooterLeftWrapper}>
           <IconAnt
-            color={"#ffff"}
+            color={favHeart}
             size={25}
-            name="hearto"
+            name="heart"
             style={{ marginRight: 10 }}
             //onPress={() => Alert.alert("Press")}
           />
@@ -129,7 +130,8 @@ const Feed = forwardRef(({ post }, ref) => {
                     width: 8,
                     height: 8,
                     borderRadius: 4,
-                    backgroundColor: currentImageView === i ? "white" : "gray",
+                    backgroundColor:
+                      currentImageView === i ? globalBlue : "gray",
                     marginHorizontal: 3,
                   }}
                 />
