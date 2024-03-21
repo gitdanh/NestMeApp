@@ -5,6 +5,8 @@ import {
   View,
   Image,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { container, form } from "../../styles/authStyle";
 import PrimaryButton from "../../components/button/PrimaryButton";
@@ -50,73 +52,84 @@ export default function Register(props) {
   };
 
   return (
-    <View style={container.center}>
-      <View style={container.formCenter}>
-        <View
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Image
-            style={{
-              width: "52%",
-              height: 45,
-              marginBottom: 30,
-              margin: 0,
-            }}
-            source={logo}
-          />
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+      }}
+    >
+      <View style={container.center}>
+        <View style={container.formCenter}>
+          <KeyboardAvoidingView
+            style={{ flex: 1, justifyContent: "center" }}
+            behavior="position"
+            keyboardVerticalOffset={-70}
+          >
+            <View
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                style={{
+                  width: "52%",
+                  height: 45,
+                  marginBottom: 30,
+                  margin: 0,
+                }}
+                source={logo}
+              />
+            </View>
+            <TextInput
+              style={form.textInput}
+              placeholder="Username"
+              placeholderTextColor="gray"
+              value={username}
+              keyboardType="twitter"
+              onChangeText={(username) =>
+                setUsername(
+                  username
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/\s+/g, "")
+                    .replace(/[^a-z0-9]/gi, "")
+                )
+              }
+            />
+            <TextInput
+              style={form.textInput}
+              placeholder="Name"
+              placeholderTextColor="gray"
+              onChangeText={(name) => setName(name)}
+            />
+            <TextInput
+              style={form.textInput}
+              placeholder="Email"
+              placeholderTextColor="gray"
+              onChangeText={(email) => setEmail(email)}
+            />
+            <TextInput
+              style={form.textInput}
+              placeholder="Password"
+              placeholderTextColor="gray"
+              secureTextEntry={true}
+              onChangeText={(password) => setPassword(password)}
+            />
+
+            <PrimaryButton onPress={onRegister}>Register</PrimaryButton>
+          </KeyboardAvoidingView>
         </View>
-        <TextInput
-          style={form.textInput}
-          placeholder="Username"
-          placeholderTextColor="gray"
-          value={username}
-          keyboardType="twitter"
-          onChangeText={(username) =>
-            setUsername(
-              username
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .replace(/\s+/g, "")
-                .replace(/[^a-z0-9]/gi, "")
-            )
-          }
-        />
-        <TextInput
-          style={form.textInput}
-          placeholder="Name"
-          placeholderTextColor="gray"
-          onChangeText={(name) => setName(name)}
-        />
-        <TextInput
-          style={form.textInput}
-          placeholder="Email"
-          placeholderTextColor="gray"
-          onChangeText={(email) => setEmail(email)}
-        />
-        <TextInput
-          style={form.textInput}
-          placeholder="Password"
-          placeholderTextColor="gray"
-          secureTextEntry={true}
-          onChangeText={(password) => setPassword(password)}
-        />
 
-        <PrimaryButton onPress={onRegister}>Register</PrimaryButton>
-      </View>
-
-      <View style={form.bottomButton}>
-        <Text
-          style={{ color: "white", width: "auto", textAlign: "center" }}
-          onPress={() => props.navigation.replace("Login")}
-        >
-          Already have an account? SignIn.
-        </Text>
-      </View>
-      {/* <Snackbar
+        <View style={form.bottomButton}>
+          <Text
+            style={{ color: "white", width: "auto", textAlign: "center" }}
+            onPress={() => props.navigation.replace("Login")}
+          >
+            Already have an account? SignIn.
+          </Text>
+        </View>
+        {/* <Snackbar
         visible={isValid.boolSnack}
         duration={2000}
         onDismiss={() => {
@@ -125,6 +138,7 @@ export default function Register(props) {
       >
         {isValid.message}
       </Snackbar> */}
-    </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }

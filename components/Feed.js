@@ -96,9 +96,9 @@ const Feed = forwardRef(({ post }, ref) => {
       <View style={styles.feedImageFooter}>
         <View style={styles.feddimageFooterLeftWrapper}>
           <IconAnt
-            color={favHeart}
+            color={post.is_user_liked ? favHeart : "#ffffff"}
             size={25}
-            name="heart"
+            name={post.is_user_liked ? "heart" : "hearto"}
             style={{ marginRight: 10 }}
             //onPress={() => Alert.alert("Press")}
           />

@@ -7,6 +7,8 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { setAccessToken } from "../../store/redux/slices/authSlice";
@@ -57,51 +59,64 @@ export default function Login(props) {
     }
   };
   return (
-    <ScrollView style={container.center}>
-      <View style={container.formCenter}>
-        <View
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Image
-            style={{
-              width: "52%",
-              height: 45,
-              marginBottom: 30,
-              margin: 0,
-            }}
-            source={logo}
-          />
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+      }}
+    >
+      <View style={container.center}>
+        <View style={container.formCenter}>
+          <KeyboardAvoidingView
+            style={{ flex: 1, justifyContent: "center" }}
+            behavior="position"
+            keyboardVerticalOffset={-70}
+          >
+            <View
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                style={{
+                  width: "52%",
+                  height: 45,
+                  marginBottom: 30,
+                  margin: 0,
+                }}
+                source={logo}
+              />
+            </View>
+
+            <TextInput
+              style={form.textInput}
+              placeholder="Username"
+              placeholderTextColor="gray"
+              onChangeText={(value) => handleChangeText("username", value)}
+            />
+            <TextInput
+              style={form.textInput}
+              placeholder="Password"
+              placeholderTextColor="gray"
+              secureTextEntry={true}
+              onChangeText={(value) => handleChangeText("password", value)}
+            />
+
+            <PrimaryButton onPress={onSignIn}>Sign In</PrimaryButton>
+          </KeyboardAvoidingView>
         </View>
-        <TextInput
-          style={form.textInput}
-          placeholder="Username"
-          placeholderTextColor="gray"
-          onChangeText={(value) => handleChangeText("username", value)}
-        />
-        <TextInput
-          style={form.textInput}
-          placeholder="Password"
-          placeholderTextColor="gray"
-          secureTextEntry={true}
-          onChangeText={(value) => handleChangeText("password", value)}
-        />
 
-        <PrimaryButton onPress={onSignIn}>Sign In</PrimaryButton>
+        <View style={form.bottomButton}>
+          <Text
+            style={{ color: "white", width: "auto", textAlign: "center" }}
+            title="Register"
+            onPress={() => props.navigation.replace("Register")}
+          >
+            Don't have an account? SignUp.
+          </Text>
+        </View>
       </View>
-
-      <View style={form.bottomButton}>
-        <Text
-          style={{ color: "white", width: "auto", textAlign: "center" }}
-          title="Register"
-          onPress={() => props.navigation.replace("Register")}
-        >
-          Don't have an account? SignUp.
-        </Text>
-      </View>
-    </ScrollView>
+    </TouchableWithoutFeedback>
   );
 }
