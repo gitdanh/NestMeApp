@@ -19,8 +19,11 @@ const tokenSlice = createSlice({
       state.userId = action.payload.userId;
       state.avatar = action.payload.avatar;
     },
+    logoutUser(state) {
+      state.accessToken = null;
+    },
   },
 });
 
-export const { setAccessToken, setLoginInfo } = tokenSlice.actions;
+export const { setAccessToken, setLoginInfo,logoutUser } = tokenSlice.actions;
 export default tokenSlice.reducer;
