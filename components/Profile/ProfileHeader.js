@@ -10,7 +10,6 @@ import { CommonActions, useNavigation } from '@react-navigation/native';
 import { logoutUser } from "../../store/redux/slices/authSlice";
 
 const ProfileHeader = ({ username }) => {
-  const navigation = useNavigation();
   const dispatch = useDispatch();
   const handleLogout = () => {
     Alert.alert(
@@ -28,11 +27,10 @@ const ProfileHeader = ({ username }) => {
             console.log("OK Pressed");
             try {
                 await AsyncStorage.removeItem("refreshToken");
-                dispatch(logoutUser()); // Gọi action creator để xóa access token từ Redux store
-                console.log("refreshToken removed successfully");
+                dispatch(logoutUser());
             } catch (error) {
                 console.error("Error removing refreshToken:", error);
-                // Handle error, perhaps show a message to the user
+        
             }
           },
         },

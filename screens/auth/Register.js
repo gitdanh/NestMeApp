@@ -7,47 +7,65 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert
 } from "react-native";
 import { container, form } from "../../styles/authStyle";
 import PrimaryButton from "../../components/button/PrimaryButton";
-
+import useHttpClient from "../../axios/public-http-hook";
 const logo = require("../../assets/logo-white.png");
 export default function Register(props) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
+  const pulicHttpRequest = useHttpClient();
+
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    fullname: '',
+    username: '',
+    otpToken:'',
+    otp:'',
+  });
   const [isValid, setIsValid] = useState(true);
 
-  const onRegister = () => {
-    if (
-      name.lenght == 0 ||
-      username.lenght == 0 ||
-      email.length == 0 ||
-      password.length == 0
-    ) {
-      setIsValid({
-        bool: true,
-        boolSnack: true,
-        message: "Please fill out everything",
-      });
+  const handleChangeText = (name, value) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  
+  const sendOTP = async () => {
+    const { email, password, fullname, username } = formData;
+    if (!email || !password || !fullname || !username) {
+      Alert.alert('Error', 'Please fill out everything');
       return;
     }
+  
     if (password.length < 6) {
-      setIsValid({
-        bool: true,
-        boolSnack: true,
-        message: "passwords must be at least 6 characters",
-      });
+      Alert.alert('Error', 'Passwords must be at least 6 characters');
       return;
     }
-    if (password.length < 6) {
+    try {
+    const url = `/auth/signup/${(username)}/${(email)}`;
+    const response = pulicHttpRequest.publicRequest(
+        url,
+        "get",
+    );
+    console.log(url)
+    console.log((await response).status + 'concac');
+    
+    const otpToken = (await response).data.otpToken;
+    const formWithOtpToken = { ...formData, otpToken };
+    props.navigation.navigate('VerifyOTP', {formData: formWithOtpToken});
+  
+    } catch (error) {
+      //console.error('Error registering:', error);
+      Alert.alert('Error', 'Email already exists or not valid email format');
       setIsValid({
         bool: true,
         boolSnack: true,
-        message: "passwords must be at least 6 characters",
+        //message: 'Error registering. Please try again.',
       });
-      return;
     }
   };
 
@@ -85,59 +103,50 @@ export default function Register(props) {
               style={form.textInput}
               placeholder="Username"
               placeholderTextColor="gray"
-              value={username}
               keyboardType="twitter"
-              onChangeText={(username) =>
-                setUsername(
-                  username
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "")
-                    .replace(/\s+/g, "")
-                    .replace(/[^a-z0-9]/gi, "")
-                )
-              }
+              onChangeText={(value) => handleChangeText("username", value)}
             />
             <TextInput
               style={form.textInput}
               placeholder="Name"
               placeholderTextColor="gray"
-              onChangeText={(name) => setName(name)}
+              onChangeText={(value) => handleChangeText("fullname", value)}
             />
             <TextInput
               style={form.textInput}
               placeholder="Email"
               placeholderTextColor="gray"
-              onChangeText={(email) => setEmail(email)}
+              onChangeText={(value) => handleChangeText("email", value)}
             />
             <TextInput
               style={form.textInput}
               placeholder="Password"
               placeholderTextColor="gray"
               secureTextEntry={true}
-              onChangeText={(password) => setPassword(password)}
+              onChangeText={(value) => handleChangeText("password", value)}
             />
 
-            <PrimaryButton onPress={onRegister}>Register</PrimaryButton>
+            <PrimaryButton onPress={() => {
+                console.log("Register button pressed");
+                sendOTP();
+            }}>
+                Register
+            </PrimaryButton>
           </KeyboardAvoidingView>
         </View>
 
         <View style={form.bottomButton}>
           <Text
             style={{ color: "white", width: "auto", textAlign: "center" }}
-            onPress={() => props.navigation.replace("Login")}
+            onPress={() => props.navigation.replace("VerifyOTP")}
           >
             Already have an account? SignIn.
           </Text>
         </View>
-        {/* <Snackbar
-        visible={isValid.boolSnack}
-        duration={2000}
-        onDismiss={() => {
-          setIsValid({ boolSnack: false });
-        }}
-      >
-        {isValid.message}
-      </Snackbar> */}
+        {isValid.bool && (
+        <Text style={{ color: 'red' }}>{isValid.message}</Text>
+      )}
+
       </View>
     </TouchableWithoutFeedback>
   );

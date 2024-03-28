@@ -3,6 +3,7 @@ import HomeScreen from "./screens/Home";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import RegisterScreen from "./screens/auth/Register";
 import LoginScreen from "./screens/auth/Login";
+import VerifyOTP from "./screens/auth/VerifyOTP";
 import ProfileScreen from "./screens/Profile";
 import ChatScreen from "./screens/Chat";
 import SingleChat from "./screens/SingleChat";
@@ -34,6 +35,8 @@ function AuthScreen() {
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="VerifyOTP" component={VerifyOTP} />
+
     </Stack.Navigator>
   );
 }
@@ -152,7 +155,9 @@ function Navigation() {
     async function refreshAccessToken() {
       try {
         const refreshToken = await AsyncStorage.getItem("refreshToken");
-        await refresh(refreshToken);
+        if (refreshToken) {
+          await refresh(refreshToken);
+        }
         setRefreshing(false);
       } catch (error) {
         setRefreshing(false);
