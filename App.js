@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import HomeScreen from "./screens/Home";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import HomeScreen from "./screens/Home";
+import CreateScreen from "./screens/Add";
 import RegisterScreen from "./screens/auth/Register";
 import LoginScreen from "./screens/auth/Login";
 import VerifyOTP from "./screens/auth/VerifyOTP";
@@ -115,7 +116,7 @@ function AuthenticatedScreen() {
               />
             );
             //iconName = focused ? "list" : "list-outline";
-          } else if (rn === "Chat") {
+          } else if (rn === "Create") {
             iconName = focused ? "settings" : "settings-outline";
           }
 
@@ -126,7 +127,7 @@ function AuthenticatedScreen() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      {/* <Tab.Screen name="Chat" component={ChatScreen} /> */}
+      <Tab.Screen name="Create" component={CreateScreen} />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
