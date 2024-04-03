@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./screens/Home";
 import CreateScreen from "./screens/Add";
+import SaveScreen from "./screens/Save";
 import RegisterScreen from "./screens/auth/Register";
 import LoginScreen from "./screens/auth/Login";
 import VerifyOTP from "./screens/auth/VerifyOTP";
@@ -54,6 +55,7 @@ function MainScreen() {
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Notify" component={NotifyScreen} />
       <Stack.Screen name="SingleChat" component={SingleChat} />
+      <Stack.Screen name="Save" component={SaveScreen} />
     </Stack.Navigator>
   );
 }
@@ -117,7 +119,7 @@ function AuthenticatedScreen() {
             );
             //iconName = focused ? "list" : "list-outline";
           } else if (rn === "Create") {
-            iconName = focused ? "settings" : "settings-outline";
+            iconName = focused ? "add-circle-sharp" : "add-circle-outline";
           }
 
           // You can return any component that you like here!

@@ -210,8 +210,9 @@ export default function VideoScreen(props) {
                         <Feather style={{ padding: 10 }} name={"camera"} size={20} color="white" />
                     </TouchableOpacity>
                 </View>
-                <View style={{ flex: 1, borderTopWidth: 1, borderColor: 'lightgrey', marginBottom: 50}}>
+                <View style={{ flex: 1, borderTopWidth: 1, borderColor: '#262626', marginBottom: 35}}>
                     <FlatList
+                        scrollEnabled={false}
                         numColumns={3}
                         horizontal={false}
                         data={galleryItems.assets}
@@ -277,54 +278,6 @@ export default function VideoScreen(props) {
     );
 }
 const styles = StyleSheet.create({
-    closeButton: {
-        position: "absolute",
-        top: 35,
-        left: 15,
-        height: closeButtonSize,
-        width: closeButtonSize,
-        borderRadius: Math.floor(closeButtonSize / 2),
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#c4c5c4",
-        opacity: 0.7,
-        zIndex: 2,
-    },
-    media: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    closeCross: {
-        width: "68%",
-        height: 1,
-        backgroundColor: "black",
-    },
-    control: {
-        position: "absolute",
-        flexDirection: "row",
-        bottom: 38,
-        width: "100%",
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    recordIndicatorContainer: {
-        flexDirection: "row",
-        position: "absolute",
-        top: 0,
-        opacity: 0.7,
-    },
-    recordTitle: {
-        fontSize: 14,
-        color: "black",
-        textAlign: "center",
-    },
-    recordDot: {
-        borderRadius: 3,
-        height: 6,
-        width: 6,
-        backgroundColor: "#ff0000",
-        marginHorizontal: 5,
-    },
     text: {
         color: "#000000",
     },
@@ -354,184 +307,15 @@ const container = StyleSheet.create({
         flex: 1,
         backgroundColor: 'black',  paddingTop: StatusBar.currentHeight || 100,
     },
-    camera: {
-        flex: 1,
-        flexDirection: 'row'
-    },
-    input: {
-        flexWrap: "wrap"
-    },
-    containerPadding: {
-        flex: 1,
-        padding: 15
-    },
-    center: {
-        flex: 1,
-    },
-    horizontal: {
-        flexDirection: 'row',
-        display: 'flex',
-    },
-    form: {
-        flex: 1,
-        margin: 25
-    },
-    profileInfo: {
-        padding: 25,
-        flexDirection: 'column',
-    },
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        height: 'auto',
-
-    },
-    formCenter: {
-        justifyContent: 'center',
-        flex: 1,
-        margin: 25
-    },
     containerImage: {
         flex: 1 / 3
-
     },
     image: {
         aspectRatio: 1 / 1,
     },
-    fillHorizontal: {
-        flexGrow: 1,
-        paddingBottom: 0
-    },
-    imageSmall: {
-        aspectRatio: 1 / 1,
-        height: 70
-    },
-    gallery: {
-
-        borderWidth: 1,
-        borderColor: 'gray',
-    },
-    splash: {
-        padding: 200,
-        height: '100%',
-        width: '100%'
-    },
-    chatRight: {
-        margin: 10,
-        marginBottom: 10,
-        backgroundColor: 'dodgerblue',
-        padding: 10,
-        borderRadius: 8,
-        alignSelf: 'flex-end'
-
-    },
-    chatLeft: {
-        margin: 10,
-        marginBottom: 10,
-        backgroundColor: 'grey',
-        padding: 10,
-        borderRadius: 8,
-        alignItems: 'flex-end',
-        textAlign: 'right',
-        alignSelf: 'flex-start'
-    }
 })
 const utils = StyleSheet.create({
-    centerHorizontal: {
-        alignItems: 'center',
-    },
-    marginBottom: {
-        marginBottom: 20,
-    },
-    marginBottomBar: {
-        marginBottom: 330,
-    },
-    marginBottomSmall: {
-        marginBottom: 10,
-    },
-    profileImageBig: {
-        width: 80,
-        height: 80,
-        borderRadius: 80 / 2,
-    },
-    profileImage: {
-        marginRight: 15,
-        width: 50,
-        height: 50,
-        borderRadius: 50 / 2,
-    },
-    profileImageSmall: {
-        marginRight: 15,
-        width: 35,
-        height: 35,
-        borderRadius: 35 / 2,
-    },
-    searchBar: {
-        backgroundColor: 'whitesmoke',
-        color: 'grey',
-        paddingLeft: 10,
-        borderRadius: 8,
-        height: 40,
-        marginTop: -5
-    },
-    justifyCenter: {
-        justifyContent: 'center',
-    },
-    alignItemsCenter: {
-        alignItems: 'center'
-    },
-    padding15: {
-        paddingTop: 15,
-        paddingRight: 15,
-        paddingLeft: 15,
-    },
-    padding10Top: {
-        paddingTop: 10
-
-    },
-    padding10: {
-        padding: 10
-    },
     margin15: {
         margin: 15
-    },
-    padding10Sides: {
-        paddingRight: 10,
-        paddingLeft: 10,
-    },
-    margin15Left: {
-        marginLeft: 15,
-    },
-    margin15Right: {
-        marginRight: 15,
-    },
-    margin5Bottom: {
-        marginBottom: 5,
-    },
-    backgroundWhite: {
-        backgroundColor: 'white',
-    },
-    borderTopGray: {
-        borderTopWidth: 1,
-        borderColor: 'lightgrey'
-    },
-    borderWhite: {
-        borderLeftWidth: 2,
-        borderRightWidth: 2,
-        borderTopWidth: 2,
-        borderColor: 'white'
-    },
-    buttonOutlined: {
-        padding: 8,
-        color: 'white',
-        borderWidth: 1,
-        borderColor: 'lightgrey',
-        borderRadius: 8,
-        textAlign: 'center',
-    },
-
-    fixedRatio: {
-        flex: 1,
-        aspectRatio: 1
     }
 })
