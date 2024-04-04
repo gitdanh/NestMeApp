@@ -1,20 +1,42 @@
 import { Feather } from '@expo/vector-icons';
 import { Video } from 'expo-av';
 import AntDesign from "react-native-vector-icons/AntDesign";
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, StatusBar, TextInput, KeyboardAvoidingView,  TouchableOpacity, View } from 'react-native';
 import { Snackbar } from 'react-native-paper';
-
-
+import {
+    getDownloadURL,
+    ref,
+    storage,
+    uploadBytesResumable,
+} from "../configs/firebase";
+import usePrivateHttpClient from "../axios/private-http-hook";
+import { createPost } from "../services/postServices";
+import { useSelector, useDispatch} from "react-redux";
 
 
 
 function Save(props) {
+    const privateHttpClient = usePrivateHttpClient();
     const [caption, setCaption] = useState("")
     const [uploading, setUploading] = useState(false)
     const [error, setError] = useState(false)
-    const [data, setData] = useState("")
-    const [keyword, setKeyword] = useState("")
+    const [snackBarOpen, setSnackBarOpen] = useState(false);
+    const [snackBarNotif, setSnackBarNotif] = useState({
+        severity: "success",
+        message: "This is success message!",
+      }); //severity: success, error, info, warning
+    const userId = useSelector((state) => state.authenticate.userId);
+    const socket = useSelector((state) => state.chat.socket);
+    const user ={
+        _id: userId
+    }
+    useEffect(() => {
+        console.log(props.route.params.imageSource)
+        console.log(props.route.params.source)
+        console.log(props.route.params.source)
+    }, []);
+    
 
 
     useLayoutEffect(() => {
@@ -24,6 +46,79 @@ function Save(props) {
             ),
         });
     }, [caption]);
+
+    const handleCreatePost = async () => {
+        setUploading(true);
+        let images = [props.route.params.source];
+        const promises = images.map(async (image) => {
+          const name = Date.now();
+          const storageRef = ref(storage, `images/${name}`);
+          const response = await fetch(image);
+          const blob = await response.blob();
+          const uploadTask = uploadBytesResumable(storageRef, blob);
+    
+          return new Promise((resolve, reject) => {
+            uploadTask.on(
+              "state_changed",
+              null,
+              (error) => {
+                console.log(error);
+                reject(error);
+                setUploading(false);
+              },
+              () => {
+                getDownloadURL(uploadTask.snapshot.ref)
+                  .then((url) => {
+                    console.log(url);
+                    resolve(url);
+                  })
+                  .catch((error) => {
+                    console.log(error);
+                    reject(error);
+                  });
+              }
+            );
+          });
+        });
+        let createdPostId;
+        try {
+          const urls = await Promise.allSettled(promises);
+          const urlStrings = urls.map((url) => url.value.toString());
+    
+          const postData = { title: caption, urlStrings };
+          const response = await createPost(
+            postData,
+            privateHttpClient.privateRequest
+          );
+    
+          if (response !== null) {
+            createdPostId = response.post._id;
+            socket.current.emit("sendNotification", {
+              sender_id: user?._id,
+              receiver_id: user?.friends,
+              content_id: createdPostId,
+              type: "post",
+            });
+            setCaption("");
+            setUploading(false);
+            setSnackBarNotif({
+              severity: "success",
+              message: "Create success",
+            });
+            setSnackBarOpen(true);
+          }
+        } catch (err) {
+            setUploading(false);
+            setSnackBarNotif({
+            severity: "error",
+            message: "Create fail with message: " + err,
+          });
+          setSnackBarOpen(true);
+          console.log(err);
+        } finally {
+            props.navigation.navigate('Home');
+        }
+    };
 
     const uploadImage = async () => {
         // if (uploading) {
@@ -118,6 +213,8 @@ function Save(props) {
                         </View>
                         
                         <TextInput
+                            value={caption}   
+                            onChangeText={(val) => setCaption(val)}
                             style={{
                                 padding: 10,
                                 paddingHorizontal: 20,
@@ -146,7 +243,7 @@ function Save(props) {
                                 display: "flex",
                                 justifyContent: "center",
                                 alignItems: 'center'
-                            }}>
+                            }} onPress={handleCreatePost}>
                                 <Text style={{
                                     color: 'white',
                                     fontSize: 14,
@@ -157,10 +254,10 @@ function Save(props) {
                         
                     </View>
                     <Snackbar
-                        visible={error}
+                        visible={snackBarOpen}
                         duration={2000}
-                        onDismiss={() => setError(false)}>
-                        Something Went Wrong!
+                        onDismiss={() => setSnackBarOpen(false)}>
+                        {snackBarNotif.message}
                     </Snackbar>
                     
                 </View>
