@@ -7,7 +7,7 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
-  Alert
+  Alert,
 } from "react-native";
 import { container, form } from "../../styles/authStyle";
 import PrimaryButton from "../../components/button/PrimaryButton";
@@ -17,12 +17,12 @@ export default function Register(props) {
   const pulicHttpRequest = useHttpClient();
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    fullname: '',
-    username: '',
-    otpToken:'',
-    otp:'',
+    email: "",
+    password: "",
+    fullname: "",
+    username: "",
+    otpToken: "",
+    otp: "",
   });
   const [isValid, setIsValid] = useState(true);
 
@@ -33,34 +33,27 @@ export default function Register(props) {
     });
   };
 
-  
   const sendOTP = async () => {
     const { email, password, fullname, username } = formData;
     if (!email || !password || !fullname || !username) {
-      Alert.alert('Error', 'Please fill out everything');
+      Alert.alert("Error", "Please fill out everything");
       return;
     }
-  
+
     if (password.length < 6) {
-      Alert.alert('Error', 'Passwords must be at least 6 characters');
+      Alert.alert("Error", "Passwords must be at least 6 characters");
       return;
     }
     try {
-    const url = `/auth/signup/${(username)}/${(email)}`;
-    const response = pulicHttpRequest.publicRequest(
-        url,
-        "get",
-    );
-    console.log(url)
-    console.log((await response).status + 'concac');
-    
-    const otpToken = (await response).data.otpToken;
-    const formWithOtpToken = { ...formData, otpToken };
-    props.navigation.navigate('VerifyOTP', {formData: formWithOtpToken});
-  
+      const url = `/auth/signup/${username}/${email}`;
+      const response = pulicHttpRequest.publicRequest(url, "get");
+
+      const otpToken = (await response).data.otpToken;
+      const formWithOtpToken = { ...formData, otpToken };
+      props.navigation.navigate("VerifyOTP", { formData: formWithOtpToken });
     } catch (error) {
       //console.error('Error registering:', error);
-      Alert.alert('Error', 'Email already exists or not valid email format');
+      Alert.alert("Error", "Email already exists or not valid email format");
       setIsValid({
         bool: true,
         boolSnack: true,
@@ -126,11 +119,13 @@ export default function Register(props) {
               onChangeText={(value) => handleChangeText("password", value)}
             />
 
-            <PrimaryButton onPress={() => {
+            <PrimaryButton
+              onPress={() => {
                 console.log("Register button pressed");
                 sendOTP();
-            }}>
-                Register
+              }}
+            >
+              Register
             </PrimaryButton>
           </KeyboardAvoidingView>
         </View>
@@ -144,9 +139,8 @@ export default function Register(props) {
           </Text>
         </View>
         {isValid.bool && (
-        <Text style={{ color: 'red' }}>{isValid.message}</Text>
-      )}
-
+          <Text style={{ color: "red" }}>{isValid.message}</Text>
+        )}
       </View>
     </TouchableWithoutFeedback>
   );
