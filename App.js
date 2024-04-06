@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./screens/Home";
 import CreateScreen from "./screens/Add";
 import SaveScreen from "./screens/Save";
+import EditProfileScreen from "./screens/EditProfile";
 import RegisterScreen from "./screens/auth/Register";
 import LoginScreen from "./screens/auth/Login";
 import VerifyOTP from "./screens/auth/VerifyOTP";
@@ -56,6 +57,7 @@ function MainScreen() {
       <Stack.Screen name="Notify" component={NotifyScreen} />
       <Stack.Screen name="SingleChat" component={SingleChat} />
       <Stack.Screen name="Save" component={SaveScreen} />
+      <Stack.Screen name="Edit" component={EditProfileScreen} />
     </Stack.Navigator>
   );
 }
@@ -74,6 +76,8 @@ function AuthenticatedScreen() {
             username: response.data.user.username,
             userId: response.data.user._id,
             avatar: response.data.user.profile_picture,
+            fullname: response.data.user.full_name,
+            bio: response.data.user.user_info.bio,
           })
         );
         setAvatar(response.data.user.profile_picture);

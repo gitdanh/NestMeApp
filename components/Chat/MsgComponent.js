@@ -42,7 +42,7 @@ const MsgComponent = (props) => {
                 //     const ratio = width / height;
 
                     return (
-                        <View style={{ maxWidth: '45%', maxHeight: 200 }} key={index}>
+                        <View style={{alignSelf: sender ? 'flex-end' : 'flex-start', maxWidth: '45%', maxHeight: 200, marginRight: 20, }} key={index}>
                             <Image
                                 style={[styles.media, { aspectRatio: 1 }]}
                                 source={{ uri: m }}

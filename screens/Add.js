@@ -31,6 +31,7 @@ export default function VideoScreen(props) {
     const [galleryItems, setGalleryItems] = useState([])
     const [galleryScrollRef, setGalleryScrollRef] = useState(null)
     const [galleryPickedImage, setGalleryPickedImage] = useState(null)
+    const [pickedImages, setPickedImages] = useState([])
     const cameraRef = useRef();
     const isFocused = useIsFocused();
 
@@ -46,6 +47,7 @@ export default function VideoScreen(props) {
                 const getPhotos = await MediaLibrary.getAssetsAsync({ sortBy: ['creationTime'], mediaType: ['photo', 'video'] })
                 setGalleryItems(getPhotos)
                 setGalleryPickedImage(getPhotos.assets[0])
+                setPickedImages([getPhotos.assets[0]])
                 setHasPermission(true)
 
             }
@@ -61,7 +63,7 @@ export default function VideoScreen(props) {
             const data = await cameraRef.current.takePictureAsync(options);
             const source = data.uri;
             if (source) {
-                props.navigation.navigate('Save', { source, imageSource: null, type })
+                props.navigation.navigate('Save', { source: [source], imageSource: null, type })
             }
         }
     };
@@ -119,18 +121,27 @@ export default function VideoScreen(props) {
         );
     };
     const handleGoToSaveOnGalleryPick = async () => {
-        let type = galleryPickedImage.mediaType == 'video' ? 0 : 1
-
-
-        const loadedAsset = await MediaLibrary.getAssetInfoAsync(galleryPickedImage);
-        let imageSource = null
-        if (type == 0) {
-            imageSource = await generateThumbnail(galleryPickedImage.uri)
-
+        let loadedAssets=[]
+        if(!pickedImages){
+            for (const pickedImage of pickedImages) {
+                const loadedAsset = await MediaLibrary.getAssetInfoAsync(pickedImage);
+                loadedAssets.push(loadedAsset.localUri)
+            }
+        } else{
+            const loadedAsset = await MediaLibrary.getAssetInfoAsync(galleryPickedImage);
+            loadedAssets.push(loadedAsset.localUri)
         }
+        
+        let type = galleryPickedImage.mediaType == 'video' ? 0 : 1
+        let imageSource = null
+            if (type == 0) {
+                imageSource = await generateThumbnail(galleryPickedImage.uri)
+
+            }
+        
 
         props.navigation.navigate('Save', {
-            source: loadedAsset.localUri,
+            source: loadedAssets,
             type,
             imageSource
         })
@@ -226,12 +237,38 @@ export default function VideoScreen(props) {
                                     borderRightWidth: 2,
                                     borderTopWidth: 2,
                                     borderColor: 'black'}]}
-                                onPress={() => { galleryScrollRef.scrollTo({ x: 0, y: 0, animated: true }); setGalleryPickedImage(item); }}>
+                                onPress={() => { galleryScrollRef.scrollTo({ x: 0, y: 0, animated: true }); setGalleryPickedImage(item); 
+                                if(pickedImages.includes(item))
+                                    setPickedImages((prev) => prev.filter(image => image !== item))
+                                else
+                                    setPickedImages((prev) => [...prev, item]) 
+                                console.log(pickedImages)
+                                }}>
 
                                 <Image
                                     style={container.image}
                                     source={{ uri: item.uri }}
                                 />
+                                {pickedImages.includes(item) &&
+                                <View
+                                    style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    top: 0,
+                                    right: 0,
+                                    backgroundColor: 'rgba(4, 3, 3, 0.8)',
+                                    zIndex: 3,
+                                    }}
+                                >
+                                <AntDesign
+                                  style={{ position: 'absolute', padding: 10, bottom: 0,
+                                    right: 0, }}
+                                  name="checkcircleo"
+                                  size={20}
+                                  color="blue"
+                                />
+                              </View>}
 
                             </TouchableOpacity>
 

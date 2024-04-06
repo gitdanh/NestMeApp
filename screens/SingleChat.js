@@ -1,28 +1,50 @@
 //import liraries
 import Icon from "react-native-vector-icons/Ionicons";
+import IconEntypo from "react-native-vector-icons/Entypo";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { ListItem, Avatar } from "react-native-elements";
 import {
   View,
   Text,
   StyleSheet,
-  ImageBackground,
+  Modal,
+  SafeAreaView,
+  ScrollView,
   TextInput,
-  SectionList,
   TouchableOpacity,
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { CommonActions, useNavigation } from "@react-navigation/native";
 import MsgComponent from "../components/Chat/MsgComponent";
 import IconAwe from "react-native-vector-icons/FontAwesome";
 import IconFeather from "react-native-vector-icons/Feather";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import IconMaterial from "react-native-vector-icons/MaterialIcons";
+import AntDesign from "react-native-vector-icons/AntDesign";
 import * as messageService from "../services/messageService";
 import defaultAvatar from "../assets/default-avatar.jpg";
 import { useSelector } from "react-redux";
 import { calculatedTime } from "../utils/calculatedTime";
+import { Audio } from "expo-av";
+import { Camera } from "expo-camera";
+import * as MediaLibrary from 'expo-media-library';
+import { useIsFocused } from '@react-navigation/native';
+import { container, utils } from "../styles/authStyle";
+import {
+  getDownloadURL,
+  ref,
+  storage,
+  uploadBytesResumable,
+} from "../configs/firebase";
+const WINDOW_HEIGHT = Dimensions.get("window").height;
+const WINDOW_WIDTH = Dimensions.get("window").width;
+const closeButtonSize = Math.floor(WINDOW_HEIGHT * 0.032);
+const captureSize = Math.floor(WINDOW_HEIGHT * 0.09);
 // create a component
 
 const SingleChat = (props) => {
@@ -192,41 +214,48 @@ const SingleChat = (props) => {
 
   const handleSendMessage = async () => {
     if((text.trim() !== "" || img.length != 0) && sending == false){
-      // const promises = img.map((image) => {
-      //   const name = Date.now();
-      //   const storageRef  = ref(storage,`images/${name}`);
-      //   const uploadTask = uploadBytesResumable(storageRef, image.file);
-      //   return new Promise((resolve, reject) => {
-      //     uploadTask.on('state_changed', 
-      //     (snapshot) => {
-      //         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      //         setProgress(progress);
-      //       },
-      //       (error) => {
-      //         console.log(error);
-      //         reject(error);
-      //       },
-      //       () => {
-      //         // console.log("Toi r");
-      //         getDownloadURL(uploadTask.snapshot.ref)
-      //         .then((url) => {
-      //           // console.log(url);
-      //           resolve(url);
-      //         })
-      //         .catch((error) => {
-      //           console.log(error);
-      //           reject(error);
-      //         });
-      //       }
-      //     );
-      //   });
-      // });
-      
+      const promises = img.map(async (image) => {
+        const name = Date.now();
+        const storageRef  = ref(storage,`images/${name}`);
+        let imageSend = image;
+        if(!isCaptured){
+          const loadedAsset = await MediaLibrary.getAssetInfoAsync(image);
+          imageSend = loadedAsset.localUri;
+        }
+        const response = await fetch(imageSend);
+        const blob = await response.blob();
+        const uploadTask = uploadBytesResumable(storageRef, blob);
+        // promises.push(uploadTask);
+        // console.log(promises);
+        return new Promise((resolve, reject) => {
+          uploadTask.on('state_changed', 
+          (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            },
+            (error) => {
+              console.log(error);
+              reject(error);
+            },
+            () => {
+              // console.log("Toi r");
+              getDownloadURL(uploadTask.snapshot.ref)
+              .then((url) => {
+                // console.log(url);
+                resolve(url);
+              })
+              .catch((error) => {
+                console.log(error);
+                reject(error);
+              });
+            }
+          );
+        });
+      });
       try{
         setSending(true);
-        // const urls = await Promise.allSettled(promises)
-        // const urlStrings = urls.map((url) => url.value.toString());
-        urlStrings = [];
+        const urls = await Promise.allSettled(promises);
+        console.log(urls);
+        const urlStrings = urls.map((url) => url.value.toString());
         try{
             const newMessage = {
             conversationId: data._id,
@@ -262,18 +291,7 @@ const SingleChat = (props) => {
           } else{
             socket.current.emit("send-msg", savedMessage)
           }
-
-          
-          // dispatch({ type: "FIRST_CONVERSATION", payload: currentChat });
-          setMsg((prevMsg) => [savedMessage, ...prevMsg]);
-          // dispatch({type: "ADD_MESSAGE", payload: savedMessage,
-          //   fromSelf: true,
-          // })
-          
-          if (result !== null) {
-            setText("") ;
-            setImg([]);
-          }
+          setMsg((prevMsg) => [savedMessage, ...prevMsg]);  
         } catch (err) {
           console.log(err);
         }
@@ -281,11 +299,148 @@ const SingleChat = (props) => {
         console.log(err);
       } finally {
         setSending(false);
+        setIsModalVisible(false); 
+        setText("") ;
+        setImg([]);
+        setIsCaptured(false);
       }
       // await ReturnHeight();
     }
   };
 
+  //Modal
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [hasPermission, setHasPermission] = useState(null);
+  const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
+  const [isPreview, setIsPreview] = useState(false);
+  const [isCaptured, setIsCaptured] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [isFlash, setIsFlash] = useState(false);
+  const [isVideoRecording, setIsVideoRecording] = useState(false);
+  const [type, setType] = useState(1);
+  const [showGallery, setShowGallery] = useState(true)
+  const [galleryItems, setGalleryItems] = useState([])
+  const cameraRef = useRef();
+  const isFocused = useIsFocused();
+  
+  useEffect(() => {
+      (async () => {
+        const cameraPermissions = await Camera.requestCameraPermissionsAsync();
+        const galleryPermissions = await MediaLibrary.requestPermissionsAsync();
+
+        const audioPermissions = await Audio.requestPermissionsAsync();
+        if (cameraPermissions.status === 'granted' && audioPermissions.status === 'granted' && galleryPermissions.status === 'granted') {
+          const getPhotos = await MediaLibrary.getAssetsAsync({ sortBy: ['creationTime'], mediaType: ['photo', 'video'] })
+          setGalleryItems(getPhotos)
+          setHasPermission(true)
+        }
+      })();
+  }, []);
+
+  const onCameraReady = () => {
+      setIsCameraReady(true);
+  };
+  const takePicture = async () => {
+    if (cameraRef.current) {
+        const options = { quality: 0.5, base64: true, skipProcessing: true };
+        const data = await cameraRef.current.takePictureAsync(options);
+        const source = data.uri;
+        if (source) {
+          setIsCaptured(true)
+          setImg((prev => [...prev, source]))
+        }
+    }
+  };
+  const recordVideo = async () => {
+      if (cameraRef.current) {
+          try {
+            const options = { maxDuration: 60, quality: Camera.Constants.VideoQuality['480p'] }
+            const videoRecordPromise = cameraRef.current.recordAsync(options);
+            if (videoRecordPromise) {
+              setIsVideoRecording(true);
+              const data = await videoRecordPromise;
+              const source = data.uri;
+              let imageSource = await generateThumbnail(source)
+              props.navigation.navigate('Save', { source, imageSource, type })
+
+            }
+          } catch (error) {
+              console.warn(error);
+          }
+      }
+  };
+  const generateThumbnail = async (source) => {
+      try {
+          const { uri } = await VideoThumbnails.getThumbnailAsync(
+              source,
+              {
+                  time: 5000,
+              }
+          );
+          return uri;
+      } catch (e) {
+          console.warn(e);
+      }
+  };
+
+
+  const stopVideoRecording = async () => {
+
+      if (cameraRef.current) {
+          setIsVideoRecording(false);
+          cameraRef.current.stopRecording();
+      }
+  };
+
+  const switchCamera = () => {
+      if (isPreview) {
+          return;
+      }
+      setCameraType((prevCameraType) =>
+          prevCameraType === Camera.Constants.Type.back
+              ? Camera.Constants.Type.front
+              : Camera.Constants.Type.back
+      );
+  };
+  const handleGoToSaveOnGalleryPick = async () => {
+      let type = 1
+      let loadedAssets=[]
+        if(!img){
+            for (const pickedImage of img) {
+                const loadedAsset = await MediaLibrary.getAssetInfoAsync(pickedImage);
+                loadedAssets.push(loadedAsset.localUri)
+            }
+        }
+
+      let imageSource = null
+      if (type == 0) {
+          imageSource = await generateThumbnail(img[0]?.uri)
+      }
+
+      setIsModalVisible(false);
+  }
+
+  const renderCaptureControl = () => (
+      <View>
+          <View style={{ justifyContent: 'space-evenly', width: '100%', alignItems: 'center', flexDirection: 'row', backgroundColor: 'black' }}>
+              <TouchableOpacity disabled={!isCameraReady} onPress={() => setIsFlash(!isFlash)} >
+                  <IconFeather style={utils.margin15} name={"zap"} size={25} color="white" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                  activeOpacity={0.7}
+                  disabled={!isCameraReady}
+                  onPress={takePicture}
+                  style={styles.capturePicture}
+              />
+              <TouchableOpacity disabled={!isCameraReady} onPress={switchCamera}>
+                  <IconFeather style={utils.margin15} name="rotate-cw" size={25} color="white" />
+              </TouchableOpacity>
+          </View>
+
+      </View>
+
+  );
   return (
     <View style={styles.container}>
       <View
@@ -399,6 +554,7 @@ const SingleChat = (props) => {
               flexDirection: "row",
               alignItems: "center",
               paddingVertical: 7,
+              paddingHorizontal: 15,
               justifyContent: "space-evenly",
               borderRadius: 25,
               borderWidth: 0.5,
@@ -406,6 +562,13 @@ const SingleChat = (props) => {
               alignSelf: "center",
             }}
           >
+            <TouchableOpacity
+              disabled={disabled}
+              style={{marginRight: 10}}
+              onPress={() => {setIsModalVisible(true), setShowGallery(false)}}
+            >
+              <IconFeather color={"gray"} size={25} name="camera" />
+            </TouchableOpacity>
             <TextInput
               style={{
                 width: "80%",
@@ -419,6 +582,14 @@ const SingleChat = (props) => {
             />
 
             <TouchableOpacity
+              style={{marginRight: 10}}
+              disabled={disabled}
+              onPress={() => {setIsModalVisible(true), setShowGallery(true)}}
+            >
+              <IconEntypo color="#fff" size={20} name="images" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
               disabled={disabled}
               onPress={handleSendMessage}
             >
@@ -427,6 +598,146 @@ const SingleChat = (props) => {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <Modal
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        >
+          <View style={{flex: 1, backgroundColor: "black", borderTopColor: "#262626", borderTopWidth: 5}}>
+            <View style={{ paddingLeft: 20, paddingRight: 20, display: "flex", flexDirection:"row", alignItems:"center", justifyContent: "space-between", backgroundColor: "#262626", paddingTop: 10, paddingBottom: 15}}>
+              <View style={{display: "flex", flexDirection:"row", alignItems:"center"}}>
+                  <AntDesign color={"white"} size={27} name="close" onPress={() => {setIsModalVisible(false); setImg([])}}/>
+              </View>
+            </View>
+            {hasPermission === null ? <View /> : 
+            hasPermission === false ? <Text style={styles.text}>No access to camera</Text> :
+            showGallery ?
+            <SafeAreaView style={{ flex: 1, marginBottom: 49}}>
+                <ScrollView
+                  style={[container.container, {backgroundColor: "black"}]}>
+                    <View style={{ flex: 1, borderTopWidth: 1, borderColor: '#262626'}}>
+                        <FlatList
+                            scrollEnabled={false}
+                            numColumns={3}
+                            horizontal={false}
+                            data={galleryItems.assets}
+
+                            contentContainerStyle={{
+                                flexGrow: 1,
+                            }}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={[container.containerImage, {borderLeftWidth: 2,
+                                      borderRightWidth: 2,
+                                      borderTopWidth: 2,
+                                      borderColor: 'black'}]}
+                                      onPress={() => { 
+                                        if(img.includes(item))
+                                          setImg((prev) => prev.filter(image => image !== item))
+                                        else
+                                          setImg((prev) => [...prev, item]) 
+                                        console.log(img) 
+                                }}>
+                                    <Image
+                                        style={container.image}
+                                        source={{ uri: item.uri }}
+                                    />
+                                    {img.includes(item) &&
+                                      <View
+                                          style={{
+                                          position: 'absolute',
+                                          bottom: 0,
+                                          left: 0,
+                                          top: 0,
+                                          right: 0,
+                                          backgroundColor: 'rgba(4, 3, 3, 0.8)',
+                                          zIndex: 2,
+                                          }}
+                                      >
+                                      <AntDesign
+                                        style={{ position: 'absolute', padding: 10, bottom: 0,
+                                          right: 0, }}
+                                        name="checkcircleo"
+                                        size={20}
+                                        color="blue"
+                                      />
+                                    </View>}
+                                </TouchableOpacity>
+                            )}
+
+                        />
+                    </View>
+                </ScrollView>
+                {img?.length > 0 &&
+                <View
+                  style={{
+                  position: 'absolute',
+                  bottom: 10,
+                  left: "10%",
+                  right: "10%",
+                  zIndex: 3,
+                  }}
+                >
+                  {sending ?  <ActivityIndicator size={40} /> :
+                  <TouchableOpacity
+                    style={{backgroundColor: "#0095f6", borderRadius: 10, padding: 10, display: "flex", justifyContent: "center", alignItems:"center"}}
+                    onPress={handleSendMessage}  >
+                      <Text style={{color: "white", fontSize: 15, fontWeight: 600}}>Send {img?.length}</Text>
+                    </TouchableOpacity> }
+                </View>}
+            </SafeAreaView> : 
+            <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'black'}}>
+              <View
+                  style={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}>
+                  { isCaptured ? <Image
+                    style={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}
+                    source={{ uri: img[0] }}
+                /> : (isFocused ?
+                    <Camera
+                        ref={cameraRef}
+                        style={{ flex: 1 }}
+                        type={cameraType}
+                        flashMode={isFlash ? Camera.Constants.FlashMode.torch : Camera.Constants.FlashMode.off}
+                        styles={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}
+                        ratio={'1:1'}
+                        onCameraReady={onCameraReady}
+                    />
+                    : null) }
+                
+              </View>
+
+              <View style={[{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  flex: 1,
+              }]}>
+                  <View>
+                      {renderCaptureControl()}
+                  </View>
+
+              </View>
+              {isCaptured > 0 &&
+                <View
+                  style={{
+                  position: 'absolute',
+                  bottom: 30,
+                  left: "10%",
+                  right: "10%",
+                  zIndex: 3,
+                  }}
+                >
+                  {sending ?  <ActivityIndicator size={40} /> :
+                  <TouchableOpacity
+                    style={{backgroundColor: "#0095f6", borderRadius: 10, padding: 10, display: "flex", justifyContent: "center", alignItems:"center"}}
+                    onPress={handleSendMessage}  >
+                      <Text style={{color: "white", fontSize: 15, fontWeight: 600}}>Send</Text>
+                    </TouchableOpacity> }
+                </View>
+}
+            </View>}
+          </View>
+        </Modal>
     </View>
   );
 };
@@ -438,6 +749,24 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
     paddingTop: 40,
   },
+  capture: {
+    backgroundColor: "red",
+    borderRadius: 5,
+    height: captureSize,
+    width: captureSize,
+    borderRadius: Math.floor(captureSize / 2),
+    marginHorizontal: 31,
+},
+capturePicture: {
+    borderWidth: 6,
+    borderColor: 'gray',
+    backgroundColor: "white",
+    borderRadius: 5,
+    height: captureSize,
+    width: captureSize,
+    borderRadius: Math.floor(captureSize / 2),
+    marginHorizontal: 31,
+},
 });
 
 //make this component available to the app

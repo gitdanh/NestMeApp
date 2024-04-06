@@ -1,10 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
-import IconAnt from "react-native-vector-icons/AntDesign";
-import IconEntypo from "react-native-vector-icons/Entypo";
-import IconFeather from "react-native-vector-icons/Feather";
-import { Touchable } from "react-native";
+import { View, Text, Image, TouchableOpacity } from "react-native";
+import { useNavigation } from '@react-navigation/native';
 import { getAvatarSource } from "../../utils/getImageSource";
 
 const ProfileDetails = ({
@@ -15,6 +11,7 @@ const ProfileDetails = ({
   friendsCount,
   friendRequestsCount,
 }) => {
+  const navigation = useNavigation();
   return (
     <View style={{ paddingHorizontal: 15 }}>
       <View
@@ -69,7 +66,7 @@ const ProfileDetails = ({
           marginHorizontal: 10,
         }}
       >
-        <TouchableOpacity style={{ flex: 1 }}>
+        <TouchableOpacity style={{ flex: 1 }} onPress={() => navigation.navigate("Edit")}>
           <Text
             style={{
               backgroundColor: "#1D1B1B",

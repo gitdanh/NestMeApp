@@ -5,6 +5,8 @@ const initialState = {
   userId: null,
   username: null,
   avatar: null,
+  fullname: null,
+  bio: null,
 };
 
 const tokenSlice = createSlice({
@@ -18,6 +20,8 @@ const tokenSlice = createSlice({
       state.username = action.payload.username;
       state.userId = action.payload.userId;
       state.avatar = action.payload.avatar;
+      state.fullname = action.payload.fullname;
+      state.bio = action.payload.bio;
     },
     logoutUser(state) {
       state.accessToken = null;

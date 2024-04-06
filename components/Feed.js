@@ -7,7 +7,7 @@ import {
   Pressable,
   FlatList,
   useWindowDimensions,
-  Alert,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
@@ -17,8 +17,10 @@ import { getAvatarSource } from "../utils/getImageSource";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import { favHeart, globalBlue } from "../utils/globalColors";
+import Comment from "./Comment"
 
 const Feed = forwardRef(({ post }, ref) => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const authUsername = useSelector((state) => state.authenticate.username);
   const [profile, setProfile] = useState(
     authUsername === post.creator.username ? "Profile" : "OtherProfile"
@@ -99,14 +101,15 @@ const Feed = forwardRef(({ post }, ref) => {
             color={post.is_user_liked ? favHeart : "#ffffff"}
             size={25}
             name={post.is_user_liked ? "heart" : "hearto"}
-            style={{ marginRight: 10 }}
+            style={{ marginRight: 15 }}
             //onPress={() => Alert.alert("Press")}
           />
           <Icon
+            onPress={() => setIsModalVisible(true)}
             color={"#ffff"}
             size={25}
             name="comment-o"
-            style={{ marginRight: 10 }}
+            style={{ marginRight: 15 }}
           />
           <IconFeather color={"#ffff"} size={25} name="send" />
         </View>
@@ -142,21 +145,41 @@ const Feed = forwardRef(({ post }, ref) => {
       </View>
       {ref ? (
         <View ref={ref} style={styles.likesAndCommentsWrapper}>
-          <Text style={styles.likesTitle}> {post.reacts_count} Likes</Text>
+          <Text style={styles.likesTitle}> {post.reacts_count} likes</Text>
           <Text>
-            {/* <Text style={styles.headerTitle}> Catherine</Text>{' '}
-          <Text style={styles.likesTitle}> Missing Summary </Text> */}
+            <Text style={styles.headerTitle}> Catherine</Text>{' '}
+            <Text style={{color: "white",
+              fontSize: 14,
+              fontWeight: "400",}}> Missing Summary </Text>
           </Text>
         </View>
       ) : (
-        <View style={styles.likesAndCommentsWrapper}>
-          <Text style={styles.likesTitle}> {post.reacts_count} Likes</Text>
+        <View style={[styles.likesAndCommentsWrapper,{flexDirection: "column"}]}>
+          <Text style={styles.likesTitle}> {post.reacts_count} likes</Text>
           <Text>
-            {/* <Text style={styles.headerTitle}> Catherine</Text>{' '}
-          <Text style={styles.likesTitle}> Missing Summary </Text> */}
+            <Text style={styles.headerTitle}> Catherine</Text>{' '}
+            <Text style={{color: "white",
+              fontSize: 14,
+              fontWeight: "400",}}> Missing Summary </Text>
           </Text>
         </View>
       )}
+
+      <Modal
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={{flex: 1, backgroundColor: "black", borderTopColor: "#262626", borderTopWidth: 5}}>
+          <View style={{ paddingLeft: 20, paddingRight: 20, display: "flex", flexDirection:"row", alignItems:"center", justifyContent: "space-between", backgroundColor: "#262626", paddingTop: 10, paddingBottom: 15}}>
+              <View style={{display: "flex", flexDirection:"row", alignItems:"center"}}>
+                  <IconAnt color={"white"} size={27} name="close" onPress={() => setIsModalVisible(false)}/>
+              </View>
+          </View>
+          <Comment post={post}/>
+        </View>
+      </Modal>
     </View>
   );
 });
@@ -190,7 +213,7 @@ export const styles = StyleSheet.create({
   headerTitle: {
     color: "#ffff",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "500",
   },
   feedImage: {
     height: 370,
@@ -220,8 +243,8 @@ export const styles = StyleSheet.create({
     marginLeft: 7,
   },
   likesTitle: {
-    color: "gray",
-    fontSize: 17,
-    fontWeight: "600",
+    color: "white",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

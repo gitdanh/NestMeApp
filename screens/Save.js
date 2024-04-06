@@ -32,24 +32,14 @@ function Save(props) {
         _id: userId
     }
     useEffect(() => {
-        console.log(props.route.params.imageSource)
-        console.log(props.route.params.source)
         console.log(props.route.params.source)
     }, []);
     
 
 
-    useLayoutEffect(() => {
-        props.navigation.setOptions({
-            headerRight: () => (
-                <Feather style={navbar.image} name="check" size={24} color="green" onPress={() => { uploadImage() }} />
-            ),
-        });
-    }, [caption]);
-
     const handleCreatePost = async () => {
         setUploading(true);
-        let images = [props.route.params.source];
+        let images = props.route.params.source;
         const promises = images.map(async (image) => {
           const name = Date.now();
           const storageRef = ref(storage, `images/${name}`);
@@ -120,40 +110,6 @@ function Save(props) {
         }
     };
 
-    const uploadImage = async () => {
-        // if (uploading) {
-        //     return;
-        // }
-        // setUploading(true)
-        // let downloadURLStill = null
-        // let downloadURL = await SaveStorage(props.route.params.source, `post/${firebase.auth().currentUser.uid}/${Math.random().toString(36)}`)
-
-        // if (props.route.params.imageSource != null) {
-        //     downloadURLStill = await SaveStorage(props.route.params.imageSource, `post/${firebase.auth().currentUser.uid}/${Math.random().toString(36)}`)
-        // }
-
-        // savePostData(downloadURL, downloadURLStill);
-
-    }
-
-    // const SaveStorage = async (image, path) => {
-    //     if (image == 'default') {
-    //         return '';
-    //     }
-
-    //     const fileRef = firebase.storage().ref()
-    //         .child(path);
-
-    //     const response = await fetch(image);
-    //     const blob = await response.blob();
-
-    //     const task = await fileRef.put(blob);
-
-    //     const downloadURL = await task.ref.getDownloadURL();
-
-    //     return downloadURL;
-    // }
-
     return (
         <View style={[container.container, {backgroundColor: "black"}]}>
             <View style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 15, display: "flex", flexDirection:"row", alignItems:"center", justifyContent: "space-between", borderBottomColor: "#262626", borderWidth: 1}}>
@@ -170,33 +126,12 @@ function Save(props) {
             ) : (
                 <View style={{flex: 1}}>
                     <View style={{backgroundColor: "black"}}>
-                    
-                        {/* <View style={[{ marginBottom: 20, width: '100%' }]}>
-                            <MentionsTextInput
-                                textInputStyle={{ borderColor: '#ebebeb', borderWidth: 1, padding: 5, fontSize: 15, width: '100%' }}
-                                suggestionsPanelStyle={{ backgroundColor: 'rgba(100,100,100,0.1)' }}
-                                loadingComponent={() => <View style={{ flex: 1, width: 200, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator /></View>}
-                                textInputMinHeight={30}
-                                textInputMaxHeight={80}
-                                trigger={'@'}
-                                triggerLocation={'new-word-only'} // 'new-word-only', 'anywhere'
-                                value={caption}
-                                onChangeText={setCaption}
-                                triggerCallback={callback.bind(this)}
-                                renderSuggestionsRow={renderSuggestionsRow.bind(this)}
-                                suggestionsData={data}
-                                keyExtractor={(item, index) => item.username}
-                                suggestionRowHeight={45}
-                                horizontal={true}
-                                MaxVisibleRowCount={3}
-                            />
-                        </View> */}
                         <View style={{borderColor: "#262626"}}>
                             {props.route.params.type ?
 
                                 <Image
                                     style={container.image}
-                                    source={{ uri: props.route.params.source }}
+                                    source={{ uri: props.route.params.source[0] }}
                                     styles={{ aspectRatio: 1 / 1, backgroundColor: 'black' }}
                                 />
 
