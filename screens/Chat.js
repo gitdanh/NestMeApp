@@ -15,6 +15,7 @@ function Chat() {
   const [conversations, setConversations] = useState([]);
   
   const userId = useSelector((state) => state.authenticate.userId);
+  const username = useSelector((state) => state.authenticate.username);
   const socket = useSelector((state) => state.chat.socket);
   const user ={
     _id: userId
@@ -197,7 +198,7 @@ function Chat() {
           <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
             <View style={{flexDirection: 'row'}}>
               <IconMaterialCommunityIcons color={"white"} size={30} name="keyboard-backspace" style={{marginRight: 10}} onPress={()=> navigation.navigate('Home')}/>
-              <Text style={{fontSize: 24, fontWeight: '500', color: 'white'}}> duongw</Text>
+              <Text style={{fontSize: 24, fontWeight: '500', color: 'white'}}> {username}</Text>
             </View>
               
             <View style={{flexDirection: 'row', alignItems: 'center'}}>

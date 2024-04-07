@@ -1,6 +1,8 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./screens/Home";
+import SearchScreen from "./screens/Search";
+
 import CreateScreen from "./screens/Add";
 import SaveScreen from "./screens/Save";
 import EditProfileScreen from "./screens/EditProfile";
@@ -124,6 +126,10 @@ function AuthenticatedScreen() {
             //iconName = focused ? "list" : "list-outline";
           } else if (rn === "Create") {
             iconName = focused ? "add-circle-sharp" : "add-circle-outline";
+          } else if (rn === "Search") {
+            iconName = focused ? "search" : "search-outline";
+          } else if (rn === "Group") {
+            iconName = focused ? "people" : "people-outline";
           }
 
           // You can return any component that you like here!
@@ -133,7 +139,9 @@ function AuthenticatedScreen() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen name="Create" component={CreateScreen} />
+      <Tab.Screen name="Group" component={SearchScreen} />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}

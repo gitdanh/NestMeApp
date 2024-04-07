@@ -1,4 +1,4 @@
-
+import * as httprequest from '../utils/httprequest';
 export const getUserByUsername = async (username, sendRequest) => {
     try {
       const response = await sendRequest(`/users/${username}`);
@@ -30,5 +30,15 @@ export const getUserByUsername = async (username, sendRequest) => {
       return response?.data;
     } catch (err) {
       throw err;
+    }
+  };
+
+  export const searchUsers = async (data) => {
+    try {
+      const response = await httprequest.get(`/users/search?searchText=${data}`);
+      return response;
+    } catch (error) {
+      console.log("Lỗi search users:", error);
+      throw new Error("Đã xảy ra lỗi search users");
     }
   };

@@ -19,10 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRefreshToken } from "../../axios/refresh-token";
 const logo = require("../../assets/logo-white.png");
 
-const UsersCanLogin = [
-  { username: "danhnt", password: "123456" },
-  { username: "duongnk", password: "1234" },
-];
+
 
 export default function Login(props) {
   const pulicHttpRequest = useHttpClient();
