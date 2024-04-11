@@ -89,7 +89,7 @@ export const getPostComments = async (
 ) => {
   try {
     const response = await sendRequest(
-      `/posts/${postId}/comments?page=${page}?limit=${limit}`
+      `/posts/${postId}/comments?page=${page}&limit=${limit}`
     );
 
     return response?.data;
@@ -107,7 +107,7 @@ export const getReplyComments = async (
 ) => {
   try {
     const response = await sendRequest(
-      `/posts/${postId}/comments/${commentId}/replies?page=${page}?limit=${limit}`
+      `/posts/${postId}/comments/${commentId}/replies?page=${page}&limit=${limit}`
     );
 
     return response?.data;

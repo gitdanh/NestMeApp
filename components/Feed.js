@@ -8,8 +8,12 @@ import {
   FlatList,
   useWindowDimensions,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { Avatar } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome";
+
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
@@ -17,7 +21,7 @@ import { getAvatarSource } from "../utils/getImageSource";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import { favHeart, globalBlue } from "../utils/globalColors";
-import Comment from "./Comment";
+import Comments from "./Comment/Comments";
 
 const Feed = forwardRef(({ post }, ref) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -37,7 +41,7 @@ const Feed = forwardRef(({ post }, ref) => {
 
   const onPressCreatorHandler = () => {
     navigator.navigate(profile, {
-      isOwnProfile: false,
+      isOwnProfile: profile === "Profile" ? true : false,
       username: post.creator.username,
     });
   };
@@ -169,6 +173,7 @@ const Feed = forwardRef(({ post }, ref) => {
       )}
 
       <Modal
+        style={{ marginBottom: 20 }}
         visible={isModalVisible}
         onRequestClose={() => setIsModalVisible(false)}
         animationType="slide"
@@ -201,23 +206,23 @@ const Feed = forwardRef(({ post }, ref) => {
                 display: "flex",
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "center",
               }}
             >
-              <IconAnt
+              {/* <IconAnt
                 color={"white"}
                 size={27}
                 name="close"
                 onPress={() => setIsModalVisible(false)}
-              />
+              /> */}
               <Text style={{ fontSize: 20, color: "white", fontWeight: "700" }}>
                 Comments
               </Text>
-              <IconFeather color="#0095f6" size={25} name="send" />
+              {/* <IconFeather color="#0095f6" size={25} name="send" /> */}
             </View>
           </View>
 
-          <Comment post={post} />
+          <Comments post={post} />
         </View>
       </Modal>
     </View>
