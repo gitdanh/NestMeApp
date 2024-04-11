@@ -94,7 +94,7 @@ function Comments({ post }) {
     }));
   };
 
-  // Function to add a replyComment to the state
+  // Function to add replyComments from server to the state
   const addReplyComments = (commentId, replyComments) => {
     setReplyComments((prevComments) => ({
       ...prevComments,
@@ -235,9 +235,7 @@ function Comments({ post }) {
                 />
               );
             }}
-            keyExtractor={(item, index) => {
-              return item._id;
-            }}
+            keyExtractor={(item, index) => item._id.toString()}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.1}
           />

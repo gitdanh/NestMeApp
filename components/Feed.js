@@ -8,8 +8,6 @@ import {
   FlatList,
   useWindowDimensions,
   Modal,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { Avatar } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -22,8 +20,12 @@ import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import { favHeart, globalBlue } from "../utils/globalColors";
 import Comments from "./Comment/Comments";
+import { reactPost } from "../services/postServices";
+import usePrivateHttpClient from "../axios/private-http-hook";
 
 const Feed = forwardRef(({ post }, ref) => {
+  const { privateRequest } = usePrivateHttpClient();
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const authUsername = useSelector((state) => state.authenticate.username);
   const [profile, setProfile] = useState(
@@ -32,6 +34,46 @@ const Feed = forwardRef(({ post }, ref) => {
   const navigator = useNavigation();
 
   const { width } = useWindowDimensions();
+
+  const [isLiked, setIsLiked] = useState(post.is_user_liked);
+  const [reactsCount, setReactsCount] = useState(post.reacts_count);
+
+  //double tap
+  const [lastPressTime, setLastPressTime] = useState(0);
+
+  const handleDoublePress = async () => {
+    const currentTime = new Date().getTime();
+    const doublePressDelay = 300; // milliseconds
+
+    if (currentTime - lastPressTime < doublePressDelay) {
+      await handleReactPost();
+    }
+
+    setLastPressTime(currentTime);
+  };
+
+  const handleReactPost = async () => {
+    try {
+      setIsLiked(!isLiked);
+      if (!isLiked) setReactsCount((prev) => ++prev);
+      else setReactsCount((prev) => --prev);
+
+      const response = await reactPost(
+        { postId: post._id, emoji: "LOVE" },
+        privateRequest
+      );
+      // if (response) {
+      //   socket.current.emit("sendNotification", {
+      //     sender_id: user?._id,
+      //     receiver_id: props.userId,
+      //     content_id: props.postId,
+      //     type: "like",
+      //   });
+      // }
+    } catch (err) {
+      console.log("react post err: ", err);
+    }
+  };
 
   useEffect(() => {
     setProfile(
@@ -81,10 +123,12 @@ const Feed = forwardRef(({ post }, ref) => {
           keyExtractor={(item, i) => i.toString()}
           renderItem={({ item }) => (
             <View style={{ marginHorizontal: 10 }}>
-              <Image
-                style={{ height: width - 20, width: width - 20 }}
-                source={{ uri: item }}
-              />
+              <Pressable onPress={handleDoublePress}>
+                <Image
+                  style={{ height: width - 20, width: width - 20 }}
+                  source={{ uri: item }}
+                />
+              </Pressable>
             </View>
           )}
           onViewableItemsChanged={onViewableItemsChanged.current}
@@ -92,21 +136,23 @@ const Feed = forwardRef(({ post }, ref) => {
         />
       ) : (
         <View style={{ marginHorizontal: 10 }}>
-          <Image
-            style={{ height: width - 20, width: width - 20 }}
-            source={{ uri: post.media[0] }}
-          />
+          <Pressable onPress={handleDoublePress}>
+            <Image
+              style={{ height: width - 20, width: width - 20 }}
+              source={{ uri: post.media[0] }}
+            />
+          </Pressable>
         </View>
       )}
 
       <View style={styles.feedImageFooter}>
         <View style={styles.feddimageFooterLeftWrapper}>
           <IconAnt
-            color={post.is_user_liked ? favHeart : "#ffffff"}
+            color={isLiked ? favHeart : "#ffffff"}
             size={25}
-            name={post.is_user_liked ? "heart" : "hearto"}
+            name={isLiked ? "heart" : "hearto"}
             style={{ marginRight: 15 }}
-            //onPress={() => Alert.alert("Press")}
+            onPress={handleReactPost}
           />
           <Icon
             onPress={() => setIsModalVisible(true)}
@@ -149,12 +195,11 @@ const Feed = forwardRef(({ post }, ref) => {
       </View>
       {ref ? (
         <View ref={ref} style={styles.likesAndCommentsWrapper}>
-          <Text style={styles.likesTitle}> {post.reacts_count} likes</Text>
+          <Text style={styles.likesTitle}> {reactsCount} likes</Text>
           <Text>
-            <Text style={styles.headerTitle}> Catherine</Text>{" "}
+            <Text style={styles.headerTitle}> {post.creator.username}</Text>{" "}
             <Text style={{ color: "white", fontSize: 14, fontWeight: "400" }}>
-              {" "}
-              Missing Summary{" "}
+              {post.content}
             </Text>
           </Text>
         </View>
@@ -162,7 +207,7 @@ const Feed = forwardRef(({ post }, ref) => {
         <View
           style={[styles.likesAndCommentsWrapper, { flexDirection: "column" }]}
         >
-          <Text style={styles.likesTitle}> {post.reacts_count} likes</Text>
+          <Text style={styles.likesTitle}> {reactsCount} likes</Text>
           <Text>
             <Text style={styles.headerTitle}> {post.creator.username}</Text>{" "}
             <Text style={{ color: "white", fontSize: 14, fontWeight: "400" }}>

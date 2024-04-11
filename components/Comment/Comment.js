@@ -37,6 +37,16 @@ const Comment = forwardRef(
     const [viewRepliesLoading, setViewRepliesLoading] = useState(false);
     const [deleteCmt, setDeleteCmt] = useState(false);
 
+    const onPressCreatorHandler = () => {
+      navigator.navigate(
+        authUsername === comment.user.username ? "Profile" : "OtherProfile",
+        {
+          isOwnProfile: authUsername === comment.user.username ? true : false,
+          username: comment.user.username,
+        }
+      );
+    };
+
     const handleViewReplies = async () => {
       setViewReplies(!viewReplies);
       if (!viewRepliesLoading) {
@@ -94,11 +104,15 @@ const Comment = forwardRef(
             source={getAvatarSource(comment.user.profile_picture)}
             rounded
             size={45}
+            onPress={onPressCreatorHandler}
           />
           <View
             style={{ flexDirection: "column", marginLeft: 20, marginTop: -4 }}
           >
-            <Text style={{ color: "white", fontSize: 15, fontWeight: 700 }}>
+            <Text
+              style={{ color: "white", fontSize: 15, fontWeight: 700 }}
+              onPress={onPressCreatorHandler}
+            >
               {comment.user.username}
             </Text>
             <Text
@@ -185,6 +199,7 @@ const Comment = forwardRef(
                       source={getAvatarSource(item.user.profile_picture)}
                       rounded
                       size={40}
+                      onPress={onPressCreatorHandler}
                     />
                     <View
                       style={{
@@ -199,6 +214,7 @@ const Comment = forwardRef(
                           fontSize: 14,
                           fontWeight: 700,
                         }}
+                        onPress={onPressCreatorHandler}
                       >
                         {item.user.username}
                       </Text>
