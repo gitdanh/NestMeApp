@@ -27,14 +27,16 @@ import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommun
 import IconMaterial from "react-native-vector-icons/MaterialIcons";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import * as messageService from "../services/messageService";
+import * as conversationService from "../services/conversationService";
 import defaultAvatar from "../assets/default-avatar.jpg";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { calculatedTime } from "../utils/calculatedTime";
 import { Audio } from "expo-av";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from 'expo-media-library';
 import { useIsFocused } from '@react-navigation/native';
 import { container, utils } from "../styles/authStyle";
+import { updateMessageRemoves } from "../store/redux/slices/chatSlice";
 import {
   getDownloadURL,
   ref,
@@ -48,8 +50,8 @@ const captureSize = Math.floor(WINDOW_HEIGHT * 0.09);
 // create a component
 
 const SingleChat = (props) => {
-  const navigation = useNavigation();
-  const { data } = props.route.params;
+  const [data, setData] = useState(props.route.params.data);
+  const dispatch = useDispatch();
   const userId = useSelector((state) => state.authenticate.userId);
   const avatar = useSelector((state) => state.authenticate.avatar);
   const socket = useSelector((state) => state.chat.socket);
@@ -105,6 +107,7 @@ const SingleChat = (props) => {
 
   useEffect(() => {
     getMessages();
+    console.log(props.route.params.data);
   }, [page]);
 
   const user = {
@@ -171,20 +174,55 @@ const SingleChat = (props) => {
   const handleMsgRecieve = (c, msgRecieve) => {
     if (c) {
         if (msgRecieve.conversationId === c._id) {
+          const isDuplicate = msg.some(
+            (message) => message._id === msgRecieve._id
+          );
+          if (!isDuplicate) {
             setMsg((prevMsg) => [msgRecieve, ...prevMsg]);
-            const reader = {
-                conversation_id: c._id, // Sửa thành 'c._id' thay vì 'data._id'
-                reader_id: user._id,
-            };
-            (async () => {
-                try {
-                    await messageService.addReader(reader);
-                } catch (err) {
-                    console.log(err);
-                }
-            })();
+          }
+          const reader = {
+              conversation_id: c._id, // Sửa thành 'c._id' thay vì 'data._id'
+              reader_id: user._id,
+          };
+          (async () => {
+              try {
+                  await messageService.addReader(reader);
+              } catch (err) {
+                  console.log(err);
+              }
+          })();
         }
     }
+  };
+
+  useEffect(() => {
+    // console.log(socket, currentChat._id);
+    // console.log(checkCurrentChatIdRef.current);
+    if(socket){
+      // console.log("toi socket", socket.current, socketEventRef.current);
+      if (socket.current && socketEventRef.current) {
+        socket.current.on("msg-deleted", (data) => handleMsgDeleted(data));
+      }
+    }
+  }, [data, socket.current]);
+
+  const handleMsgDeleted = (data) => {
+    // console.log(data);
+    dispatch(updateMessageRemoves(data.messageId));
+  };
+
+  useEffect(() => {
+    if(socket){
+      // console.log("toi socket");
+      if (socket.current) {
+        socket.current.on("delete-recieve", (con) => handleRecieveDeleteChat(con));
+      }
+    }
+  }, [socket?.current]);
+
+  const handleRecieveDeleteChat = async (con) => {
+    console.log(con);
+    setData(con);
   };
 
   // readers ........................................
@@ -215,7 +253,7 @@ const SingleChat = (props) => {
   const handleSendMessage = async () => {
     if((text.trim() !== "" || img.length != 0) && sending == false){
       const promises = img.map(async (image) => {
-        const name = Date.now();
+        const name = Date.now() + Math.random();
         const storageRef  = ref(storage,`images/${name}`);
         let imageSend = image;
         if(!isCaptured){
@@ -281,11 +319,19 @@ const SingleChat = (props) => {
               last_msg = result?.content;
             }
             console.log(text, last_msg);
+            const isDeleted = data.is_deleted.map(deletedItem => {
+              if (deletedItem.user_id === data.userIds[0]) {
+                return { ...deletedItem, deleted: false };
+              }
+              return deletedItem;
+            });
+
+            setData(prevData => ({ ...prevData, is_deleted: isDeleted }));
             const con = {_id: data._id, userIds: [user._id], name: user.full_name, img: user.profile_picture, 
               msg_id: result._id, lastMsg: last_msg, unread: true, online: true, last_online: data.last_online,
-              is_deleted: data.is_deleted,recieve_ids: data.userIds,
+              is_deleted: isDeleted,recieve_ids: data.userIds,
             };
-            console.log(con);
+            // console.log(con);
             conversationService.returnConversation(data);
             socket.current.emit("return-chat", con);
           } else{
@@ -308,6 +354,37 @@ const SingleChat = (props) => {
     }
   };
 
+  //Xoa ............................................
+  const [more, setMore] = useState(false);
+  const handleDelete = async () =>{
+    console.log("xoa ne" + data._id )
+    try{
+        const info = {
+            userId: user._id,
+            conversationId: data._id
+        }
+        await conversationService.deleteConversation(info)
+        const isDeleted = item.is_deleted.map(deletedItem => {
+          if (deletedItem.user_id === user._id) {
+            return { ...deletedItem, deleted: true };
+          }
+          return deletedItem;
+        });
+        setData(prevData => ({ ...prevData, is_deleted: isDeleted }));
+        const con = {_id: data._id, userIds: [user._id], name: user.full_name, img: user.profile_picture, 
+          msg_id: result._id, lastMsg: last_msg, unread: true, online: true, last_online: data.last_online,
+          is_deleted: updatedData.is_deleted, recieve_ids: data.userIds,
+        };
+
+        socket.current.emit("delete-chat", con);
+    } catch (error){
+        console.log(error);
+    } finally{
+      setMore(false);
+      props.navigation.navigate("Chat", { con: data._id });
+    } 
+  }
+
   //Modal
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
@@ -316,8 +393,6 @@ const SingleChat = (props) => {
   const [isCaptured, setIsCaptured] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isFlash, setIsFlash] = useState(false);
-  const [isVideoRecording, setIsVideoRecording] = useState(false);
-  const [type, setType] = useState(1);
   const [showGallery, setShowGallery] = useState(true)
   const [galleryItems, setGalleryItems] = useState([])
   const cameraRef = useRef();
@@ -351,24 +426,7 @@ const SingleChat = (props) => {
         }
     }
   };
-  const recordVideo = async () => {
-      if (cameraRef.current) {
-          try {
-            const options = { maxDuration: 60, quality: Camera.Constants.VideoQuality['480p'] }
-            const videoRecordPromise = cameraRef.current.recordAsync(options);
-            if (videoRecordPromise) {
-              setIsVideoRecording(true);
-              const data = await videoRecordPromise;
-              const source = data.uri;
-              let imageSource = await generateThumbnail(source)
-              props.navigation.navigate('Save', { source, imageSource, type })
-
-            }
-          } catch (error) {
-              console.warn(error);
-          }
-      }
-  };
+  
   const generateThumbnail = async (source) => {
       try {
           const { uri } = await VideoThumbnails.getThumbnailAsync(
@@ -383,15 +441,6 @@ const SingleChat = (props) => {
       }
   };
 
-
-  const stopVideoRecording = async () => {
-
-      if (cameraRef.current) {
-          setIsVideoRecording(false);
-          cameraRef.current.stopRecording();
-      }
-  };
-
   const switchCamera = () => {
       if (isPreview) {
           return;
@@ -402,23 +451,6 @@ const SingleChat = (props) => {
               : Camera.Constants.Type.back
       );
   };
-  const handleGoToSaveOnGalleryPick = async () => {
-      let type = 1
-      let loadedAssets=[]
-        if(!img){
-            for (const pickedImage of img) {
-                const loadedAsset = await MediaLibrary.getAssetInfoAsync(pickedImage);
-                loadedAssets.push(loadedAsset.localUri)
-            }
-        }
-
-      let imageSource = null
-      if (type == 0) {
-          imageSource = await generateThumbnail(img[0]?.uri)
-      }
-
-      setIsModalVisible(false);
-  }
 
   const renderCaptureControl = () => (
       <View>
@@ -458,7 +490,7 @@ const SingleChat = (props) => {
             name="keyboard-backspace"
             style={{ marginRight: 10 }}
             onPress={() => {
-              navigation.navigate("Chat");
+              props.navigation.navigate("Chat");
               setMsg([]);
             }}
           />
@@ -501,13 +533,7 @@ const SingleChat = (props) => {
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <IconAwe
-            color={"white"}
-            size={25}
-            name="plus-square"
-            style={{ marginRight: 10 }}
-          />
-          <IconFeather color={"white"} size={25} name="menu" />
+          <IconFeather color={"white"} size={25} name="menu" onPress={() => setMore(true)}/>
         </View>
       </View>
       <KeyboardAvoidingView
@@ -528,7 +554,7 @@ const SingleChat = (props) => {
             return (
               <MsgComponent
                 sender={item.sender_id === user._id}
-                message={item.content}
+                currentChat={data}
                 {...lastMessageRef(index)}
                 item={item}
               />
@@ -637,7 +663,6 @@ const SingleChat = (props) => {
                                           setImg((prev) => prev.filter(image => image !== item))
                                         else
                                           setImg((prev) => [...prev, item]) 
-                                        console.log(img) 
                                 }}>
                                     <Image
                                         style={container.image}
@@ -734,8 +759,22 @@ const SingleChat = (props) => {
                       <Text style={{color: "white", fontSize: 15, fontWeight: 600}}>Send</Text>
                     </TouchableOpacity> }
                 </View>
-}
+              }
             </View>}
+          </View>
+        </Modal>
+
+        <Modal
+          visible={more}
+          onRequestClose={() => setMore(false)}
+          animationType="fade"
+          transparent={true}
+        >
+          <View style={styles.centeredView}>
+            <View style={{ backgroundColor: "#262626", borderRadius: 10}}>
+              <Text style={{color: "rgb(237, 73, 86)", width: 200, padding: 15, borderBottomColor: "#4e4d4d", borderBottomWidth: 2, fontSize: 15, fontWeight: 500, textAlign: "center"}} onPress={handleDelete}>Delete</Text>
+              <Text style={{color: "white", width: 200, padding: 15, fontSize: 15, fontWeight: 500, textAlign: "center"}} onPress={() => setMore(false)}>Cancel</Text>
+            </View>
           </View>
         </Modal>
     </View>
@@ -744,6 +783,12 @@ const SingleChat = (props) => {
 
 // define your styles
 const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
   container: {
     flex: 1,
     backgroundColor: "black",
