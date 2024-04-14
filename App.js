@@ -140,7 +140,11 @@ function AuthenticatedScreen() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen name="Create" component={CreateScreen} />
+      <Tab.Screen
+        name="Create"
+        component={CreateScreen}
+        options={{ tabBarStyle: { display: "none" } }}
+      />
       <Tab.Screen name="Group" component={GroupScreen} />
       <Tab.Screen
         name="Profile"
