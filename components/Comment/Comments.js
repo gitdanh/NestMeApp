@@ -202,6 +202,8 @@ function Comments({ post }) {
     setText(initialText);
   }, [initialText, replyCommentId]);
 
+  let rowRefs = new Map();
+
   return (
     <View style={{ flex: 1 }}>
       <KeyboardAvoidingView
@@ -231,6 +233,7 @@ function Comments({ post }) {
                   setViewReplies={(value) =>
                     handleChangeViewReplies(itemData.item._id, value)
                   }
+                  rowRefs={rowRefs}
                   {...lastCommentRef(itemData.index)}
                 />
               );

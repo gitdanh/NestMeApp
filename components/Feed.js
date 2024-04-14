@@ -8,10 +8,11 @@ import {
   FlatList,
   useWindowDimensions,
   Modal,
+  Alert,
 } from "react-native";
 import { Avatar } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome";
-
+import IconMaterialCommunity from "react-native-vector-icons/MaterialCommunityIcons";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
@@ -20,14 +21,21 @@ import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import { favHeart, globalBlue } from "../utils/globalColors";
 import Comments from "./Comment/Comments";
-import { reactPost } from "../services/postServices";
+import {
+  deletePost,
+  reactPost,
+  reportPost,
+  savePost,
+} from "../services/postServices";
 import usePrivateHttpClient from "../axios/private-http-hook";
 
-const Feed = forwardRef(({ post }, ref) => {
+const Feed = forwardRef(({ post, setPosts }, ref) => {
   const { privateRequest } = usePrivateHttpClient();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const authUsername = useSelector((state) => state.authenticate.username);
+  const authUserId = useSelector((state) => state.authenticate.userId);
+
   const [profile, setProfile] = useState(
     authUsername === post.creator.username ? "Profile" : "OtherProfile"
   );
@@ -37,6 +45,10 @@ const Feed = forwardRef(({ post }, ref) => {
 
   const [isLiked, setIsLiked] = useState(post.is_user_liked);
   const [reactsCount, setReactsCount] = useState(post.reacts_count);
+  const [isSaved, setIsSaved] = useState(post.is_saved);
+  const [saving, setSaving] = useState(false);
+
+  const [reportLoading, setReportLoading] = useState(false);
 
   //double tap
   const [lastPressTime, setLastPressTime] = useState(0);
@@ -97,6 +109,110 @@ const Feed = forwardRef(({ post }, ref) => {
 
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
 
+  //Delete post
+  const deleteThisPost = async () => {
+    if (!reportLoading) {
+      try {
+        setReportLoading(true);
+        const response = await deletePost(post._id, privateRequest);
+        if (response.message) {
+          setPosts((prevPosts) =>
+            prevPosts.filter((prevPost) => prevPost._id !== post._id)
+          );
+          setReportLoading(false);
+          Alert.alert("Success", "Delete post success!");
+        }
+      } catch (err) {
+        setReportLoading(false);
+        Alert.alert("Error", "Delete post fail: " + err);
+      }
+    }
+  };
+
+  const handleDeletePost = () => {
+    Alert.alert("Are you sure?", "Action cannot be undone!", [
+      { text: "Cancle" },
+      { text: "Yes", onPress: deleteThisPost, style: "destructive" },
+    ]);
+  };
+
+  //Report post
+  const handleReportPost = async (reportReason) => {
+    try {
+      setReportLoading(true);
+      const response = await reportPost(post._id, reportReason, privateRequest);
+      if (response.message) {
+        setReportLoading(false);
+
+        Alert.alert(
+          "Success",
+          "Report post success with reason: " + reportReason
+        );
+      }
+    } catch (err) {
+      setReportLoading(false);
+      Alert.alert("Error", "Report post fail with reason: " + reportReason);
+      console.error(err);
+    }
+  };
+
+  const reasonList = [
+    "Indecent photo",
+    "Violence",
+    "Harassment",
+    "Terrorism",
+    "Hateful language, false information",
+    "Spam",
+  ];
+
+  const openReportReasons = () => {
+    Alert.alert("Reasons", "Why are you reporting this post?", [
+      ...reasonList.map((reason) => ({
+        text: reason,
+        onPress: () => handleReportPost(reason),
+      })),
+      { text: "Cancle", style: "cancel" },
+    ]);
+  };
+
+  //Save post
+  const saveThisPost = async () => {
+    if (!saving) {
+      let message;
+      try {
+        setSaving(true);
+        const response = await savePost(post._id, !isSaved, privateRequest);
+        if (response.message) {
+          setIsSaved(!isSaved);
+          setSaving(false);
+          if (!isSaved) message = "Saved post success!";
+          else message = "UnSaved post success!";
+          Alert.alert("Success", message);
+        }
+      } catch (err) {
+        setSaving(false);
+        if (!isSaved) message = "Saved post fail!";
+        else message = "UnSaved post fail!";
+        Alert.alert("Error", message);
+      }
+    }
+  };
+
+  const togglePostOptions = () => {
+    Alert.alert("Action", "What action do you want to take with this post?", [
+      {
+        text: post.creator._id !== authUserId ? "Report" : "Delete",
+        onPress:
+          post.creator._id !== authUserId
+            ? openReportReasons
+            : handleDeletePost,
+        style: "destructive",
+      },
+      { text: "Save post", onPress: saveThisPost },
+      { text: "Cancle", style: "cancel" },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
@@ -112,7 +228,13 @@ const Feed = forwardRef(({ post }, ref) => {
             {post.creator.username}
           </Text>
         </View>
-        <IconEntypo color={"#ffff"} size={20} name="dots-three-vertical" />
+        <IconEntypo
+          style={{ alignSelf: "center" }}
+          color={"#ffff"}
+          size={20}
+          name="dots-three-horizontal"
+          onPress={togglePostOptions}
+        />
       </View>
       {post.media.length > 1 ? (
         <FlatList
@@ -163,7 +285,13 @@ const Feed = forwardRef(({ post }, ref) => {
           />
           <IconFeather color={"#ffff"} size={25} name="send" />
         </View>
-        <Icon color={"#ffff"} size={25} name="bookmark-o" />
+        <IconMaterialCommunity
+          style={{ marginRight: -6.5 }}
+          color={"#ffff"}
+          size={30}
+          name={isSaved ? "bookmark-check" : "bookmark-outline"}
+          onPress={saveThisPost}
+        />
         {post.media.length > 1 && (
           <View
             style={{
@@ -281,8 +409,8 @@ export const styles = StyleSheet.create({
     display: "flex",
   },
   profileThumb: {
-    width: 40,
-    height: 40,
+    width: 35,
+    height: 35,
     borderRadius: 50,
   },
   headerWrapper: {

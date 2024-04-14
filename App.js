@@ -26,6 +26,7 @@ import { setLoginInfo } from "./store/redux/slices/authSlice";
 import useRefreshToken from "./axios/refresh-token";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAvatarSource } from "./utils/getImageSource";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -41,7 +42,6 @@ function AuthScreen() {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="VerifyOTP" component={VerifyOTP} />
-
     </Stack.Navigator>
   );
 }
@@ -199,10 +199,12 @@ export default function App() {
   return (
     <>
       <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-        <StatusBar style="light" />
-        <Provider store={store}>
-          <Navigation />
-        </Provider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <StatusBar style="light" />
+          <Provider store={store}>
+            <Navigation />
+          </Provider>
+        </GestureHandlerRootView>
       </SafeAreaView>
     </>
   );

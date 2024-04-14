@@ -1,5 +1,15 @@
-import { forwardRef, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import { forwardRef, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Text,
+  View,
+  Animated,
+  Pressable,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 import { Avatar } from "react-native-elements";
 import { getAvatarSource } from "../../utils/getImageSource";
 import renderMentionLink from "../../utils/renderMentionLink";
@@ -10,6 +20,7 @@ import {
 } from "../../services/postServices";
 import usePrivateHttpClient from "../../axios/private-http-hook";
 import { useNavigation } from "@react-navigation/native";
+import Octicons from "react-native-vector-icons/Octicons";
 
 const Comment = forwardRef(
   (
@@ -27,6 +38,7 @@ const Comment = forwardRef(
       viewReplies,
       setViewReplies,
       inputRef,
+      rowRefs,
     },
     ref
   ) => {
@@ -35,7 +47,7 @@ const Comment = forwardRef(
     const authUsername = useSelector((state) => state.authenticate.username);
 
     const [viewRepliesLoading, setViewRepliesLoading] = useState(false);
-    const [deleteCmt, setDeleteCmt] = useState(false);
+    const [deleteCmtLoading, setDeleteCmtLoading] = useState(false);
 
     const onPressCreatorHandler = () => {
       navigator.navigate(
@@ -77,73 +89,176 @@ const Comment = forwardRef(
       inputRef.current.focus();
     };
 
-    // const handleDeletePostComment = async () => {
-    //   if (!reportLoading) {
-    //     try {
-    //       //setReportLoading(true);
-    //       const response = await deletePostComment(comment._id, privateRequest);
-    //       if (response.message) {
-    //         setComments((prevComments) =>
-    //           prevComments.filter(
-    //             (prevComment) => prevComment._id !== props.comment._id
-    //           )
-    //         );
-    //         if (deleteCmt) toggleDeleteCmt();
-    //         //setReportLoading(false);
-    //       }
-    //     } catch (err) {
-    //       //setReportLoading(false);
-    //     }
-    //   }
-    // };
+    const deleteThisPostComment = async () => {
+      if (!deleteCmtLoading) {
+        try {
+          setDeleteCmtLoading(true);
+          const response = await deletePostComment(comment._id, privateRequest);
+          if (response.message) {
+            setComments((prevComments) =>
+              prevComments.filter(
+                (prevComment) => prevComment._id !== comment._id
+              )
+            );
+
+            setDeleteCmtLoading(false);
+          }
+        } catch (err) {
+          setDeleteCmtLoading(false);
+        }
+      }
+    };
+
+    const handleDeletePostComment = () => {
+      Alert.alert("Are you sure?", "Action cannot be undone!", [
+        { text: "Cancle" },
+        { text: "Yes", onPress: deleteThisPostComment, style: "destructive" },
+      ]);
+    };
+
+    const rightSwipe = (progress, dragX, thisComment) => {
+      let totalWidth = authUsername === thisComment.user.username ? 120 : 60;
+
+      const trans = dragX.interpolate({
+        inputRange: [-1 * totalWidth, 0],
+        outputRange: [0, totalWidth],
+        extrapolate: "clamp",
+      });
+
+      return (
+        <Animated.View
+          style={[
+            {
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "gray",
+            },
+            { transform: [{ translateX: trans }] },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => {
+              [...rowRefs.entries()].forEach(([key, ref]) => {
+                ref.close();
+              });
+              replyClick();
+            }}
+            activeOpacity={0.4}
+          >
+            <View
+              style={{
+                width: 60,
+                height: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Octicons name="reply" size={30} />
+            </View>
+          </TouchableOpacity>
+          {/* <View
+            style={{
+              flex: 1,
+              borderStyle: "solid",
+              borderWidth: 0.5,
+              borderColor: "white",
+              width: 0,
+              height: "80%",
+            }}
+          ></View> */}
+          {authUsername === thisComment.user.username && (
+            <TouchableOpacity
+              onPress={() => {
+                [...rowRefs.entries()].forEach(([key, ref]) => {
+                  ref.close();
+                });
+                handleDeletePostComment();
+              }}
+              activeOpacity={0.7}
+            >
+              <View
+                style={{
+                  width: 60,
+                  alignItems: "center",
+                  backgroundColor: "red",
+                  height: "100%",
+                  justifyContent: "center",
+                }}
+              >
+                <Octicons name="trash" size={30} />
+              </View>
+            </TouchableOpacity>
+          )}
+        </Animated.View>
+      );
+    };
 
     return (
       <>
-        <View style={{ flexDirection: "row", padding: 20 }}>
-          <Avatar
-            source={getAvatarSource(comment.user.profile_picture)}
-            rounded
-            size={45}
-            onPress={onPressCreatorHandler}
-          />
-          <View
-            style={{ flexDirection: "column", marginLeft: 20, marginTop: -4 }}
-          >
-            <Text
-              style={{ color: "white", fontSize: 15, fontWeight: 700 }}
+        <Swipeable
+          key={comment._id}
+          ref={(ref) => {
+            if (ref && !rowRefs.get(comment._id)) {
+              rowRefs.set(comment._id, ref);
+            }
+          }}
+          renderRightActions={(progress, dragX) =>
+            rightSwipe(progress, dragX, comment)
+          }
+          onSwipeableWillOpen={() => {
+            [...rowRefs.entries()].forEach(([key, ref]) => {
+              if (key !== comment._id && ref) ref.close();
+            });
+          }}
+          overshootRight={false}
+          overshootLeft={false}
+        >
+          <View style={{ flexDirection: "row", padding: 20 }}>
+            <Avatar
+              source={getAvatarSource(comment.user.profile_picture)}
+              rounded
+              size={45}
               onPress={onPressCreatorHandler}
+            />
+            <View
+              style={{ flexDirection: "column", marginLeft: 20, marginTop: -4 }}
             >
-              {comment.user.username}
-            </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 14,
-                fontWeight: 400,
-                flexWrap: "wrap",
-                maxWidth: "100%",
-              }}
-            >
-              {renderMentionLink(comment.comment, navigator, authUsername)}
-            </Text>
-            {ref ? (
               <Text
-                ref={ref}
-                style={{ color: "gray", fontSize: 14, fontWeight: 400 }}
-                onPress={replyClick}
+                style={{ color: "white", fontSize: 15, fontWeight: 700 }}
+                onPress={onPressCreatorHandler}
               >
-                Reply
+                {comment.user.username}
               </Text>
-            ) : (
               <Text
-                style={{ color: "gray", fontSize: 14, fontWeight: 400 }}
-                onPress={replyClick}
+                style={{
+                  color: "white",
+                  fontSize: 14,
+                  fontWeight: 400,
+                  flexWrap: "wrap",
+                  maxWidth: "100%",
+                }}
               >
-                Reply
+                {renderMentionLink(comment.comment, navigator, authUsername)}
               </Text>
-            )}
+              {ref ? (
+                <Text
+                  ref={ref}
+                  style={{ color: "gray", fontSize: 14, fontWeight: 400 }}
+                  onPress={replyClick}
+                >
+                  Reply
+                </Text>
+              ) : (
+                <Text
+                  style={{ color: "gray", fontSize: 14, fontWeight: 400 }}
+                  onPress={replyClick}
+                >
+                  Reply
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
+        </Swipeable>
         {/* Reply comment */}
         {children_cmts_count > 0 && (
           <View
@@ -187,60 +302,83 @@ const Comment = forwardRef(
               data={replyComments}
               renderItem={({ item, i }) => {
                 return (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      paddingLeft: 40,
-                      paddingRight: 20,
-                      marginVertical: 10,
+                  <Swipeable
+                    key={item._id}
+                    ref={(ref) => {
+                      if (ref && !rowRefs.get(item._id)) {
+                        rowRefs.set(item._id, ref);
+                      }
                     }}
+                    renderRightActions={(progress, dragX) =>
+                      rightSwipe(progress, dragX, item)
+                    }
+                    onSwipeableWillOpen={() => {
+                      [...rowRefs.entries()].forEach(([key, ref]) => {
+                        if (key !== item._id && ref) ref.close();
+                      });
+                    }}
+                    overshootRight={false}
+                    overshootLeft={false}
                   >
-                    <Avatar
-                      source={getAvatarSource(item.user.profile_picture)}
-                      rounded
-                      size={40}
-                      onPress={onPressCreatorHandler}
-                    />
                     <View
                       style={{
-                        flexDirection: "column",
-                        marginLeft: 15,
-                        marginTop: -4,
+                        flexDirection: "row",
+                        paddingLeft: 40,
+                        paddingRight: 20,
+                        marginVertical: 10,
                       }}
                     >
-                      <Text
-                        style={{
-                          color: "white",
-                          fontSize: 14,
-                          fontWeight: 700,
-                        }}
+                      <Avatar
+                        source={getAvatarSource(item.user.profile_picture)}
+                        rounded
+                        size={40}
                         onPress={onPressCreatorHandler}
-                      >
-                        {item.user.username}
-                      </Text>
-                      <Text
+                      />
+                      <View
                         style={{
-                          color: "white",
-                          fontSize: 13,
-                          fontWeight: 400,
-                          flexWrap: "wrap",
-                          maxWidth: "100%",
+                          flexDirection: "column",
+                          marginLeft: 15,
+                          marginTop: -4,
                         }}
                       >
-                        {renderMentionLink(
-                          item.comment,
-                          navigator,
-                          authUsername
-                        )}
-                      </Text>
-                      <Text
-                        style={{ color: "gray", fontSize: 13, fontWeight: 400 }}
-                        onPress={replyClick}
-                      >
-                        Reply
-                      </Text>
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}
+                          onPress={onPressCreatorHandler}
+                        >
+                          {item.user.username}
+                        </Text>
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 13,
+                            fontWeight: 400,
+                            flexWrap: "wrap",
+                            maxWidth: "100%",
+                          }}
+                        >
+                          {renderMentionLink(
+                            item.comment,
+                            navigator,
+                            authUsername
+                          )}
+                        </Text>
+                        <Text
+                          style={{
+                            color: "gray",
+                            fontSize: 13,
+                            fontWeight: 400,
+                          }}
+                          onPress={replyClick}
+                        >
+                          Reply
+                        </Text>
+                      </View>
                     </View>
-                  </View>
+                  </Swipeable>
                 );
               }}
               keyExtractor={(item, index) => {

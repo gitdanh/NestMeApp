@@ -122,7 +122,11 @@ function Home(props) {
             data={posts}
             renderItem={(itemData) => {
               return (
-                <Feed post={itemData.item} {...lastPostRef(itemData.index)} />
+                <Feed
+                  post={itemData.item}
+                  setPosts={setPosts}
+                  {...lastPostRef(itemData.index)}
+                />
               );
             }}
             keyExtractor={(item, index) => {
