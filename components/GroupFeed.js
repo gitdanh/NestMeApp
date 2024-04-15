@@ -29,7 +29,7 @@ import {
 } from "../services/postServices";
 import usePrivateHttpClient from "../axios/private-http-hook";
 
-const Feed = forwardRef(({ post, setPosts }, ref) => {
+const GroupFeed = forwardRef(({ post, setPosts }, ref) => {
   const { privateRequest } = usePrivateHttpClient();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -217,15 +217,27 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
         <View style={styles.headerLeftWrapper}>
-          <Pressable onPress={onPressCreatorHandler}>
+          <View>
             <Image
               style={styles.profileThumb}
               source={getAvatarSource(post.creator.profile_picture)}
             />
-          </Pressable>
-          <Text style={[styles.headerTitle, {marginLeft: 10}]} onPress={onPressCreatorHandler}>
-            {post.creator.username}
-          </Text>
+            <Image
+              style={{position: "absolute", width: 20, height: 20, borderRadius: 50, left: "75%", bottom: -5, borderColor: "black", borderWidth: 2}}
+              source={getAvatarSource(post.creator.profile_picture)}
+            />
+          </View>
+          <View style={{marginLeft: 15}}>
+            <Text style={styles.headerTitle} onPress={onPressCreatorHandler}>
+              {post.creator.username}
+            </Text>
+            <Text style={{color: "#A8A8A8",
+                fontSize: 14,
+                fontWeight: "500",}} onPress={onPressCreatorHandler}>
+              {post.creator.username}
+            </Text>
+          </View>
+          
         </View>
         <IconEntypo
           style={{ alignSelf: "center" }}
@@ -401,7 +413,7 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
   );
 });
 
-export default Feed;
+export default GroupFeed;
 
 export const styles = StyleSheet.create({
   container: {
@@ -410,7 +422,7 @@ export const styles = StyleSheet.create({
   profileThumb: {
     width: 35,
     height: 35,
-    borderRadius: 50,
+    borderRadius: 10,
   },
   headerWrapper: {
     display: "flex",

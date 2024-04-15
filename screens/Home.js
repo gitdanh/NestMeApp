@@ -1,24 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Text,
   View,
   StyleSheet,
-  ScrollView,
   Image,
   FlatList,
   ActivityIndicator,
 } from "react-native";
 import Feed from "../components/Feed";
-import Footer from "../components/Footer";
-import Icon from "react-native-vector-icons/FontAwesome";
+import GroupFeed from "../components/GroupFeed";
 import IconAnt from "react-native-vector-icons/AntDesign";
-import IconFeather from "react-native-vector-icons/Feather";
 import { StatusBar } from "expo-status-bar";
 import usePrivateHttpClient from "../axios/private-http-hook";
 import { useSelector, useDispatch } from "react-redux";
 import { setSocket } from "../store/redux/slices/chatSlice";
 import { io } from "socket.io-client";
-import { current } from "@reduxjs/toolkit";
 
 function Home(props) {
   const { privateRequest } = usePrivateHttpClient();
@@ -74,11 +69,11 @@ function Home(props) {
       const data = response.data;
 
       if (data) {
-        const postsCount = data.posts.length;
+        const postsCount = data?.posts.length;
         setHasMorePost(postsCount > 0 && postsCount === 10);
         data.posts.filter((post) => post?.group === null);
 
-        setPosts((prev) => [...prev, ...data.posts]);
+        setPosts((prev) => [...prev, ...data?.posts]);
       }
       setPostsLoading(false);
     } catch (err) {

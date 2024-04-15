@@ -4,6 +4,7 @@ import { View, StyleSheet, StatusBar, Image, FlatList, Text, ScrollView, TextInp
 import Icon from "react-native-vector-icons/Ionicons";
 import usePrivateHttpClient from "../axios/private-http-hook";
 import { useSelector } from "react-redux";
+import { useNavigation } from '@react-navigation/native';
 import PrimaryButton from "../components/button/PrimaryButton";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconFeather from "react-native-vector-icons/Feather";
@@ -18,6 +19,7 @@ import {
     get1Group,
   } from "../services/groupService";
 function Group() {
+  const navigation = useNavigation();
     const privateHttpRequest = usePrivateHttpClient();
     const [modalInvited, setModalInvited] = useState(false);
     const [modal, setModal] = useState(false);
@@ -97,7 +99,7 @@ function Group() {
     
     const renderItems = ({ item }) => {
         return(
-            <TouchableOpacity style={{flexDirection: "row", paddingHorizontal: 20, paddingVertical: 15}}>
+            <TouchableOpacity style={{flexDirection: "row", paddingHorizontal: 20, paddingVertical: 15}} onPress={() => navigation.navigate("GroupDetail", {data: item})}>
                 <Image source={item.cover === "/static-resources/default-cover.jpg"
                         ? defaultCover : { uri: item.cover }} style={{borderRadius: 10, width: 40, height: 40}} /> 
                 <View style={{flexDirection: "column", marginLeft: 20}}>
