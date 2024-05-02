@@ -76,8 +76,6 @@ function Home(props) {
       if (data) {
         const postsCount = data.posts.length;
         setHasMorePost(postsCount > 0 && postsCount === 10);
-        data.posts.filter((post) => post?.group === null);
-
         setPosts((prev) => [...prev, ...data.posts]);
       }
       setPostsLoading(false);

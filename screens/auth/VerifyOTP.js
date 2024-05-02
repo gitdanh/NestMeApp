@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import useHttpClient from "../../axios/public-http-hook";
 import PrimaryButton from "../../components/button/PrimaryButton";
+import OTPInput from "../../components/OTPInput/OTPInput";
 export default function VerifyOTP({ navigation, route }) {
   const pulicHttpRequest = useHttpClient();
   const [otp, setOTP] = useState("");
@@ -21,6 +22,7 @@ export default function VerifyOTP({ navigation, route }) {
       return;
     }
     const formWithOTP = { ...formData, otp };
+
     try {
       const response = await pulicHttpRequest.publicRequest(
         "/auth/signup",
@@ -59,14 +61,14 @@ export default function VerifyOTP({ navigation, route }) {
         <Text
           style={{
             color: "white",
-            fontSize: 14,
+            fontSize: 20,
             fontWeight: 600,
             marginBottom: 20,
           }}
         >
           Please enter OTP:
         </Text>
-        <TextInput
+        {/* <TextInput
           maxLength={6}
           style={{
             textAlign: "center",
@@ -85,8 +87,19 @@ export default function VerifyOTP({ navigation, route }) {
           onChangeText={(text) => setOTP(text)}
           value={otp}
           keyboardType="numeric"
+        /> */}
+        <OTPInput
+          length={6}
+          value={otp}
+          disabled={pulicHttpRequest.isLoading}
+          onChange={setOTP}
         />
-        <PrimaryButton onPress={handleVerifyOTP}>Verify OTP</PrimaryButton>
+        <PrimaryButton
+          onPress={handleVerifyOTP}
+          overwriteTextStyle={{ fontSize: 20 }}
+        >
+          Verify OTP
+        </PrimaryButton>
         <Button title="Cancel" onPress={handleCancel} />
       </View>
     </TouchableWithoutFeedback>

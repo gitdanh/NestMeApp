@@ -51,7 +51,7 @@ function Save(props) {
     setUploading(true);
     let images = props.route.params.source;
     const promises = images.map(async (image) => {
-      const name = Date.now();
+      const name = Date.now() + Math.random();
       const storageRef = ref(storage, `images/${name}`);
       const response = await fetch(image);
       const blob = await response.blob();

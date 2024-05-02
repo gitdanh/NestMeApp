@@ -180,7 +180,7 @@ function Navigation() {
         setRefreshing(false);
       } catch (error) {
         setRefreshing(false);
-        console.error("Error refreshing access token:", error);
+        console.log("Error refreshing access token:", error);
       }
     }
     refreshAccessToken();

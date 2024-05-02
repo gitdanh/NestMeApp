@@ -133,7 +133,7 @@ export default function Register(props) {
         <View style={form.bottomButton}>
           <Text
             style={{ color: "white", width: "auto", textAlign: "center" }}
-            onPress={() => props.navigation.replace("VerifyOTP")}
+            onPress={() => props.navigation.replace("Login")}
           >
             Already have an account? SignIn.
           </Text>

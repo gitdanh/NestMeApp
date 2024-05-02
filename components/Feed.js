@@ -28,6 +28,7 @@ import {
   savePost,
 } from "../services/postServices";
 import usePrivateHttpClient from "../axios/private-http-hook";
+import { getGroupCoverUrl } from "../utils/getGroupCoverUrl";
 
 const Feed = forwardRef(({ post, setPosts }, ref) => {
   const { privateRequest } = usePrivateHttpClient();
@@ -217,16 +218,68 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
         <View style={styles.headerLeftWrapper}>
-          <Pressable onPress={onPressCreatorHandler}>
-            <Image
-              style={styles.profileThumb}
-              source={getAvatarSource(post.creator.profile_picture)}
-            />
-          </Pressable>
-          <Text style={styles.headerTitle} onPress={onPressCreatorHandler}>
-            {" "}
-            {post.creator.username}
-          </Text>
+          {post?.group ? (
+            <>
+              <View style={{ position: "relative" }}>
+                <Pressable onPress={onPressCreatorHandler}>
+                  <Image
+                    style={{ width: 40, height: 40, borderRadius: 10 }}
+                    source={getGroupCoverUrl(post?.group.cover)}
+                  />
+                </Pressable>
+                <Pressable onPress={onPressCreatorHandler}>
+                  <Image
+                    style={{
+                      position: "absolute",
+                      bottom: -2,
+                      left: "45%",
+                      borderRadius: 50,
+                      borderWidth: 1,
+                      borderColor: "black",
+                      width: 24,
+                      height: 24,
+                    }}
+                    source={getAvatarSource(post.creator.profile_picture)}
+                  />
+                </Pressable>
+              </View>
+              <View
+                style={{
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  style={{ fontWeight: 600, fontSize: 16, color: "white" }}
+                  onPress={onPressCreatorHandler}
+                >
+                  {" "}
+                  {post?.group.name}
+                </Text>
+                <Text
+                  style={{ fontWeight: 400, fontSize: 12, color: "#A8A8A8" }}
+                  onPress={onPressCreatorHandler}
+                >
+                  {" "}
+                  {post.creator.username}
+                </Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <Pressable onPress={onPressCreatorHandler}>
+                <Image
+                  style={styles.profileThumb}
+                  source={getAvatarSource(post.creator.profile_picture)}
+                />
+              </Pressable>
+              <Text style={styles.headerTitle} onPress={onPressCreatorHandler}>
+                {" "}
+                {post.creator.username}
+              </Text>
+            </>
+          )}
         </View>
         <IconEntypo
           style={{ alignSelf: "center" }}
@@ -244,10 +297,10 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
           showsHorizontalScrollIndicator={false}
           keyExtractor={(item, i) => i.toString()}
           renderItem={({ item }) => (
-            <View style={{ marginHorizontal: 10 }}>
+            <View>
               <Pressable onPress={handleDoublePress}>
                 <Image
-                  style={{ height: width - 20, width: width - 20 }}
+                  style={{ height: width + 20, width: width }}
                   source={{ uri: item }}
                 />
               </Pressable>
@@ -257,10 +310,10 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
           viewabilityConfig={viewabilityConfig.current}
         />
       ) : (
-        <View style={{ marginHorizontal: 10 }}>
+        <View>
           <Pressable onPress={handleDoublePress}>
             <Image
-              style={{ height: width - 20, width: width - 20 }}
+              style={{ height: width + 20, width: width }}
               source={{ uri: post.media[0] }}
             />
           </Pressable>

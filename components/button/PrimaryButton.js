@@ -1,6 +1,11 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 
-function PrimaryButton({ children, onPress, overwriteStyle }) {
+function PrimaryButton({
+  children,
+  onPress,
+  overwriteButtonStyle = {},
+  overwriteTextStyle = {},
+}) {
   return (
     <View style={styles.buttonOuterContainer}>
       <Pressable
@@ -12,7 +17,7 @@ function PrimaryButton({ children, onPress, overwriteStyle }) {
         onPress={onPress}
         android_ripple={{ color: "#0088E1" }}
       >
-        <Text style={styles.buttonText}>{children}</Text>
+        <Text style={[styles.buttonText, overwriteTextStyle]}>{children}</Text>
       </Pressable>
     </View>
   );
