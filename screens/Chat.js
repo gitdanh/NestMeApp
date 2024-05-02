@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef }  from 'react';
 import { View, FlatList, StatusBar, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
 import { ListItem, Avatar } from 'react-native-elements';
-import { CommonActions, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconFeather from "react-native-vector-icons/Feather";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -9,18 +9,18 @@ import * as conversationService from '../services/conversationService';
 import  { UserSkeleton }  from '../components/UserSkeleton';
 import defaultAvatar from '../assets/default-avatar.jpg';
 import { useSelector, useDispatch} from "react-redux";
-import { setAccessToken } from "../store/redux/slices/authSlice";
+import { updateMessageRemoves } from "../store/redux/slices/chatSlice";
 
-function Chat() {
+function Chat(props) {
   const [conversations, setConversations] = useState([]);
   
   const userId = useSelector((state) => state.authenticate.userId);
   const username = useSelector((state) => state.authenticate.username);
   const socket = useSelector((state) => state.chat.socket);
+  const messageRemoves = useSelector((state) => state.chat.messageRemoves);
   const user ={
     _id: userId
   }
-  const [search, setSearch] = useState('')
     const navigation = useNavigation();
     const [isLoadingSearch, setIsLoadingSearch] = useState(false);
     const [isPetching, setIsPetching] = useState(false);
@@ -62,7 +62,9 @@ function Chat() {
     
     const debouncedSearchCons = debounce(searchCons, 500);
 
-
+    useEffect(() => {
+      console.log(props.route.params)
+    }, [props.route.params]);
     useEffect(() => {
       if(user){
           const fetchData = async () => {
@@ -80,7 +82,7 @@ function Chat() {
           };
           fetchData();
       }
-    }, []);
+    }, [props.route.params]);
 
     // useEffect(() => {
     //     // console.log(socket, currentChat._id);
@@ -152,7 +154,7 @@ function Chat() {
                     lastmsg = "Image";
                   else
                     lastmsg = data.content;
-                  return { ...con, lastMsg: lastmsg, unread: true };
+                  return { ...con, msg_id: data._id , lastMsg: lastmsg, unread: true };
                 } else {
                   return con;
                 }
@@ -162,30 +164,97 @@ function Chat() {
       }
     }, [socket?.current]);
 
-    const renderItems = ({ item }) => {
-      
-      return (
-        <ListItem
-          containerStyle={styles.listItem}
-          onPress={() => navigation.navigate('SingleChat', { data: item })}
-        >
-          <View>
-            <Avatar source={item.img === ""
-                      ? defaultAvatar : { uri: item.img }} rounded title={item.name} size="medium" />
-            {}
-            {item.online ? 
-            <View style={{position: "absolute", width: 12, height: 12, borderRadius: 50, backgroundColor: "green", left: "75%", bottom: 2}}></View>
-            : null}
-          </View>
-          <ListItem.Content>
-            <ListItem.Title style={item.unread ? { fontSize: 15, color: '#fff', fontWeight: "800"} : styles.name}>{item.name}</ListItem.Title>
-            <ListItem.Subtitle style={item.unread ? { fontSize: 13, color: '#fff', fontWeight: "800"} : styles.subtitle} numberOfLines={1}>
-              {item.lastMsg}
-            </ListItem.Subtitle>
-          </ListItem.Content>
-          {item.unread ? (<View style={{ width: 10, height: 10, marginRight: 10, borderRadius: 50, backgroundColor: "#0095f6"}}></View>):null}
-        </ListItem>
+    useEffect(() => {
+      // console.log(socket, currentChat._id);
+      // console.log(checkCurrentChatIdRef.current);
+      if(socket){
+        if (socket.current) {
+          socket.current.on("msg-deleted", (data) => handleMsgDeleted(data));
+        }
+      }
+    }, [user, socket.current]);
+  
+    const handleMsgDeleted = (data) => {
+      setConversations((prevConversations) => {
+        return prevConversations.map((con) => {
+          if (con.msg_id == data.messageId) {
+            return { ...con , lastMsg: "Tin nhắn đã được thu hồi", unread: true };
+          } else {
+            return con;
+          }
+        });
+      });
+    };
+
+    useEffect(() => {
+      if(socket){
+        // console.log("toi socket");
+        if (socket.current) {
+          socket.current.on("return-recieve", (data) => handleReturnChat(data));
+        }
+      }
+    }, [socket?.current]);
+  
+    const handleReturnChat = async (data) => {
+        console.log(data);
+        setConversations((prev) => [data, ...prev])
+    };
+
+    useEffect(() => {
+      if(socket){
+        // console.log("toi socket");
+        if (socket.current) {
+          socket.current.on("delete-recieve", (data) => handleRecieveDeleteChat(data));
+        }
+      }
+    }, [socket?.current]);
+  
+    const handleRecieveDeleteChat = async (data) => {
+      console.log(data);
+      setConversations((prev) => prev.map((item) => {
+          if(item._id = data._id){
+            return { ...item, is_deleted: data.is_deleted };
+          }
+          return item;
+        })
       );
+    };
+
+    const renderItems = ({ item }) => {
+      console.log(item.is_deleted)
+      if(!item.is_deleted.deleted)
+        return (
+          <ListItem
+            containerStyle={styles.listItem}
+            onPress={() => {navigation.navigate('SingleChat', { data: item });
+              setConversations((prevConversations) => {
+                return prevConversations.map((con) => {
+                  if (con._id == item._id) {
+                    return { ...con , unread: false };
+                  } else {
+                    return con;
+                  }
+                });
+              });
+            }}
+          >
+            <View>
+              <Avatar source={item.img === ""
+                        ? defaultAvatar : { uri: item.img }} rounded title={item.name} size="medium" />
+              {}
+              {item.online ? 
+              <View style={{position: "absolute", width: 12, height: 12, borderRadius: 50, backgroundColor: "green", left: "75%", bottom: 2}}></View>
+              : null}
+            </View>
+            <ListItem.Content>
+              <ListItem.Title style={item.unread ? { fontSize: 15, color: '#fff', fontWeight: "800"} : styles.name}>{item.name}</ListItem.Title>
+              <ListItem.Subtitle style={item.unread ? { fontSize: 13, color: '#fff', fontWeight: "800"} : styles.subtitle} numberOfLines={1}>
+                {item.lastMsg}
+              </ListItem.Subtitle>
+            </ListItem.Content>
+            {item.unread ? (<View style={{ width: 10, height: 10, marginRight: 10, borderRadius: 50, backgroundColor: "#0095f6"}}></View>):null}
+          </ListItem>
+        );
     };
   
     const navigateToAllUser = () => {

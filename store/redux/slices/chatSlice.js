@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   currentChat: null,
   messages: null,
-  messageRemoves: null,
+  messageRemoves: [],
   socket: null,
 };
 
@@ -23,8 +23,11 @@ const chatSlice = createSlice({
     setMessageRemoves: (state, action) => {
         state.messageRemoves = action.payload;
     },
+    updateMessageRemoves: (state, action) => {
+      state.messageRemoves= [...state.messageRemoves, action.payload];
+    },
   },
 });
 
-export const { setSocket, setCurrentChat, setMessages, setMessageRemoves } = chatSlice.actions;
+export const { setSocket, setCurrentChat, setMessages, setMessageRemoves, updateMessageRemoves } = chatSlice.actions;
 export default chatSlice.reducer;

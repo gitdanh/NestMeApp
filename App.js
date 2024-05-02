@@ -4,6 +4,7 @@ import HomeScreen from "./screens/Home";
 import SearchScreen from "./screens/Search";
 import CreateScreen from "./screens/Add";
 import GroupScreen from "./screens/Group";
+import GroupDetail from "./screens/GroupDetail";
 import SaveScreen from "./screens/Save";
 import EditProfileScreen from "./screens/EditProfile";
 import RegisterScreen from "./screens/auth/Register";
@@ -60,6 +61,7 @@ function MainScreen() {
       <Stack.Screen name="SingleChat" component={SingleChat} />
       <Stack.Screen name="Save" component={SaveScreen} />
       <Stack.Screen name="Edit" component={EditProfileScreen} />
+      <Stack.Screen name="GroupDetail" component={GroupDetail} />
     </Stack.Navigator>
   );
 }
