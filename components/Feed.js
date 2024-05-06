@@ -221,7 +221,13 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
           {post?.group ? (
             <>
               <View style={{ position: "relative" }}>
-                <Pressable onPress={onPressCreatorHandler}>
+                <Pressable
+                  onPress={() =>
+                    navigator.navigate("GroupDetail", {
+                      groupId: post?.group._id,
+                    })
+                  }
+                >
                   <Image
                     style={{ width: 40, height: 40, borderRadius: 10 }}
                     source={getGroupCoverUrl(post?.group.cover)}
@@ -252,7 +258,11 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
               >
                 <Text
                   style={{ fontWeight: 600, fontSize: 16, color: "white" }}
-                  onPress={onPressCreatorHandler}
+                  onPress={() =>
+                    navigator.navigate("GroupDetail", {
+                      groupId: post?.group._id,
+                    })
+                  }
                 >
                   {" "}
                   {post?.group.name}

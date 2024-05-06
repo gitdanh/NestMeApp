@@ -16,17 +16,13 @@ import PrimaryButton from "../../components/button/PrimaryButton";
 import { container, form } from "../../styles/authStyle";
 import useHttpClient from "../../axios/public-http-hook";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRefreshToken } from "../../axios/refresh-token";
 const logo = require("../../assets/logo-white.png");
 
-export default function Login(props) {
+export default function ForgotPassword(props) {
   const pulicHttpRequest = useHttpClient();
 
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState("");
 
   const handleChangeText = (key, value) => {
     setFormData({
@@ -35,22 +31,26 @@ export default function Login(props) {
     });
   };
 
-  const onSignIn = async () => {
+  const onSubmit = async () => {
+    if (!formData) {
+      Alert.alert("Error", "Email or username is empty!");
+      return;
+    }
     try {
       const response = await pulicHttpRequest.publicRequest(
-        "/auth/mlogin",
+        "/auth/mforgot-password",
         "post",
-        formData,
+        { usernameOrEmail: formData },
         { headers: { "Content-type": "application/json" } }
       );
-      if (response.status !== 200) {
-        throw new Error("Đăng nhập thất bại");
-      }
 
-      dispatch(setAccessToken(response.data.accessToken));
-      AsyncStorage.setItem("refreshToken", response.data.refreshToken);
-    } catch (error) {
-      Alert.alert("Lỗi", error.message);
+      if (response.data.otp_token) {
+        props.navigation.navigate("VerifyOTPResetPassword", {
+          otpToken: response.data.otp_token,
+        });
+      }
+    } catch (err) {
+      Alert.alert("Lỗi", err.message);
     }
   };
   return (
@@ -66,7 +66,7 @@ export default function Login(props) {
             behavior="position"
             keyboardVerticalOffset={-70}
           >
-            <View
+            {/* <View
               style={{
                 display: "flex",
                 justifyContent: "center",
@@ -82,44 +82,52 @@ export default function Login(props) {
                 }}
                 source={logo}
               />
-            </View>
-
-            <TextInput
-              style={form.textInput}
-              placeholder="Username"
-              placeholderTextColor="gray"
-              onChangeText={(value) => handleChangeText("username", value)}
-            />
-            <TextInput
-              style={form.textInput}
-              placeholder="Password"
-              placeholderTextColor="gray"
-              secureTextEntry={true}
-              onChangeText={(value) => handleChangeText("password", value)}
-            />
-
-            <PrimaryButton onPress={onSignIn}>Sign In</PrimaryButton>
+            </View> */}
             <Text
               style={{
-                color: "#008ae6",
+                color: "white",
+                fontSize: 30,
+                fontWeight: 600,
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+            >
+              Have some problem when login?
+            </Text>
+            <TextInput
+              style={form.textInput}
+              placeholder="Email or username"
+              placeholderTextColor="gray"
+              onChangeText={(value) => setFormData(value)}
+            />
+
+            <PrimaryButton onPress={onSubmit}>Submit</PrimaryButton>
+            <Text
+              style={{
+                color: "white",
                 textAlign: "center",
                 textTransform: "uppercase",
                 marginTop: 20,
               }}
-              onPress={() => props.navigation.navigate("ForgotPassword")}
+              onPress={() => props.navigation.goBack()}
             >
-              Forgot password?
+              Back to login
             </Text>
           </KeyboardAvoidingView>
         </View>
 
         <View style={form.bottomButton}>
           <Text
-            style={{ color: "white", width: "auto", textAlign: "center" }}
+            style={{
+              color: "white",
+              width: "auto",
+              textAlign: "center",
+              textTransform: "uppercase",
+            }}
             title="Register"
             onPress={() => props.navigation.replace("Register")}
           >
-            Don't have an account? SignUp.
+            Create new account!
           </Text>
         </View>
       </View>

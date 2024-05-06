@@ -13,7 +13,7 @@ export const createGroup = async (formData, sendRequest) => {
 
 export const get1Group = async (group, sendRequest) => {
   try {
-    const response = await sendRequest(`/groups?group=${group}`);
+    const response = await sendRequest(`/groups/${group}`);
 
     return response?.data;
   } catch (err) {

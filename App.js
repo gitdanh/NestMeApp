@@ -14,6 +14,8 @@ import ProfileScreen from "./screens/Profile";
 import ChatScreen from "./screens/Chat";
 import SingleChat from "./screens/SingleChat";
 import NotifyScreen from "./screens/Notify";
+import ForgotPasswordScreen from "./screens/auth/ForgotPassword";
+import VerifyOTPResetPasswordScreen from "./screens/auth/VerifyOTPResetPassword";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
@@ -43,6 +45,11 @@ function AuthScreen() {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="VerifyOTP" component={VerifyOTP} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen
+        name="VerifyOTPResetPassword"
+        component={VerifyOTPResetPasswordScreen}
+      />
     </Stack.Navigator>
   );
 }

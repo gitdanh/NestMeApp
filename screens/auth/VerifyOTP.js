@@ -30,9 +30,9 @@ export default function VerifyOTP({ navigation, route }) {
         formWithOTP,
         { headers: { "Content-type": "application/json" } }
       );
-
-      console.log("Registration successful:", response.data);
-      navigation.navigate("Login");
+      if (response.data) {
+        navigation.navigate("Login");
+      }
     } catch (error) {
       //console.error('Error registering:', error);
       Alert.alert("Error", "Invalid OTP. Please try again.");
