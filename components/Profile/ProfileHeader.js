@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, Alert } from "react-native";
+import React, {useState} from "react";
+import { View, Text, StyleSheet, Modal, Pressable, Image, Alert } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import IconEntypo from "react-native-vector-icons/Entypo";
@@ -9,7 +9,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { logoutUser } from "../../store/redux/slices/authSlice";
 
-const ProfileHeader = ({ username }) => {
+const ProfileHeader = ({ props, username }) => {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const handleLogout = () => {
     Alert.alert(
@@ -38,6 +39,7 @@ const ProfileHeader = ({ username }) => {
       { cancelable: false }
     );
   }
+  const [modalVisible, setModalVisible] = useState(false);
   return (
     <View
       style={{
@@ -59,16 +61,83 @@ const ProfileHeader = ({ username }) => {
           {username}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Icon
-            color={"white"}
-            size={25}
-            name="plus-square"
-            style={{ marginRight: 10 }}
-          />
-          <IconFeather color={"white"} size={25} name="menu" onPress={handleLogout}/>
+          <IconFeather color={"white"} size={25} name="menu" onPress={() => setModalVisible(true)}/>
         </View>
       </View>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert('Modal has been closed.');
+          setModalVisible(!modalVisible);
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <View style={{borderBottomColor: "#a8a8a8",
+                borderBottomWidth: 1, width: 200, padding: 10}}>
+                  <IconAnt
+                style={{marginLeft: 150,}}
+                color={"white"}
+                size={27}
+                name="close"
+                onPress={() => setModalVisible(!modalVisible)}
+              />
+            </View>
+            <Text style={[styles.modalText, {borderBottomColor: "#a8a8a8",
+                borderBottomWidth: 1}]} onPress={() => navigation.navigate("ChangePass")}>Change Password</Text>
+            <Text style={styles.modalText} onPress={handleLogout}>Log Out</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'black',
+    borderRadius: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: '#F194FF',
+  },
+  buttonClose: {
+    backgroundColor: '#2196F3',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    width: 200,
+    padding: 20,
+    color: "white",
+    textAlign: 'center',
+    fontWeight: "500",
+    fontSize: 15,
+  },
+});
 export default ProfileHeader;

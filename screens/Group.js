@@ -43,7 +43,13 @@ function Group() {
   const [adminGroups, setAdminGroups] = useState([]);
   const [memberGroups, setMemberGroups] = useState([]);
   const [invitedGroups, setInvitedGroups] = useState([]);
+  const socket = useSelector((state) => state.chat.socket);
+  const userId = useSelector((state) => state.authenticate.userId);
   const avatar = useSelector((state) => state.authenticate.avatar);
+  const user = {
+    _id: userId,
+    avatar: avatar,
+  };
   const getAdminGroup = useCallback(async () => {
     try {
       setIsLoadingSearch(true);
@@ -143,6 +149,63 @@ function Group() {
   };
 
   const renderModalItems = ({ item }) => {
+    const [status, setStatus] = useState("")
+    const [loading, setLoading] = useState(false)
+    const handleDeleteToGroup = async () => {
+        if(!loading){
+            setLoading(true);
+            try {
+                const respone = await deleteToGroup(
+                  item._id,
+                  privateHttpRequest.privateRequest
+                );
+                if (respone !== null) {
+                    setStatus("Rejected");
+                    setLoading(false);
+                    socket.current.emit("sendNotification", {
+                        sender_id: user._id,
+                        receiver_id: [item.owner],
+                        group_id: item._id,
+                        reponse: false,
+                        type: "rejectGroup",
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                setLoading(false);
+            }
+        }
+    };
+
+    const handleAcceptToGroup = async () => {
+        if(!loading){
+            setLoading(true);
+            console.log(item._id);
+            try {
+                const respone = await acceptToGroup(
+                item._id,
+                privateHttpRequest.privateRequest
+                );
+                if (respone !== null) {
+                    setStatus("Accepted");
+                    const newgroup = {_id: item._id, name: item.name, cover: item.cover, status: "MEMBER"}
+                    setMemberGroups(prev => [...prev, newgroup])
+                    setLoading(false);
+                    socket.current.emit("sendNotification", {
+                        sender_id: user._id,
+                        receiver_id: [item.owner],
+                        group_id: item._id,
+                        reponse: true,
+                        type: "acceptGroup",
+                      });
+                }
+                console.log(respone);
+            } catch (err) {
+                console.error(err);
+                setLoading(false);
+            }
+        }
+    };
     return (
       <View style={{ marginBottom: 10 }}>
         <View style={{ flexDirection: "row", paddingVertical: 15 }}>
@@ -169,6 +232,19 @@ function Group() {
           </View>
         </View>
         <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+        {status !== "" ? 
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "500",
+                color: "#A8A8A8",
+                marginLeft: 20,
+                marginTop: 10,
+              }}
+            >
+              {status}
+            </Text>
+          : <>
           <TouchableOpacity
             style={{
               width: "45%",
@@ -179,6 +255,7 @@ function Group() {
               alignItems: "center",
               marginRight: "10%",
             }}
+            onPress={handleAcceptToGroup}
           >
             <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
               Accept
@@ -193,11 +270,13 @@ function Group() {
               justifyContent: "center",
               alignItems: "center",
             }}
+            onPress={handleDeleteToGroup}
           >
             <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
               Reject
             </Text>
           </TouchableOpacity>
+          </>}
         </View>
       </View>
     );
@@ -522,16 +601,36 @@ function Group() {
               </Text>
             </View>
           </View>
+          { invitedGroups.length > 0 ?
           <View style={{ paddingHorizontal: 20, marginTop: 15 }}>
             <View>
               <FlatList
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
-                data={adminGroups}
+                data={invitedGroups}
                 renderItem={renderModalItems}
               />
             </View>
-          </View>
+          </View> : <View
+            style={{
+              borderTopColor: "#262626",
+              borderWidth: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "500",
+                color: "#A8A8A8",
+                marginTop: 10,
+              }}
+            >
+              No invitations
+            </Text>
+          </View>}
         </View>
       </Modal>
       <Modal
