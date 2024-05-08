@@ -11,40 +11,86 @@ import {
 } from "react-native";
 import { container, form } from "../styles/authStyle";
 import PrimaryButton from "../components/button/PrimaryButton";
-import useHttpClient from "../axios/public-http-hook";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-export default function ChangePass(props) {
-    const [formData, setFormData] = useState({
-        oldpw: "",
-        newpw: "",
-        repeatpw: "",
-      });
-    
-      const [isValid, setIsValid] = useState(true);
+import usePrivateHttpClient from "../axios/private-http-hook";
+import { updateUserPassword } from "../services/userService";
+import { logoutUser } from "../store/redux/slices/authSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
 
-      const handleChangeText = (name, value) => {
-        setFormData({
-          ...formData,
-          [name]: value,
-        });
-      };
-    return (
+export default function ChangePass(props) {
+  const { privateRequest } = usePrivateHttpClient();
+  const dispatch = useDispatch();
+
+  const [formData, setFormData] = useState({
+    oldpw: "",
+    newpw: "",
+    repeatpw: "",
+  });
+
+  const [updatePassLoading, setUpdatePassLoading] = useState(false);
+
+  const [isValid, setIsValid] = useState(true);
+
+  const handleChangeText = (name, value) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const updatePass = async () => {
+    if (
+      !(
+        formData.oldpw === "" &&
+        formData.newpw === "" &&
+        formData.repeatpw === ""
+      )
+    ) {
+      if (formData.newpw !== formData.repeatpw) {
+        Alert.alert("Repeat password not equal to new password!");
+        return;
+      }
+      setUpdatePassLoading(true);
+      try {
+        const response = await updateUserPassword(
+          { oldPass: formData.oldpw, newPass: formData.newpw },
+          privateRequest
+        );
+
+        if (response.message) {
+          Alert.alert(response.message);
+          setUpdatePassLoading(false);
+          dispatch(logoutUser());
+          await AsyncStorage.removeItem("refreshToken");
+          setUpdatePassLoading(false);
+        }
+      } catch (err) {
+        Alert.alert(err.message);
+        setUpdatePassLoading(false);
+      }
+    }
+  };
+
+  return (
     <TouchableWithoutFeedback
       onPress={() => {
         Keyboard.dismiss();
       }}
     >
       <View style={container.center}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 30 }}>
-            <IconMaterialCommunityIcons
-                color={"white"}
-                size={30}
-                name="keyboard-backspace"
-                style={{ marginRight: 10 }}
-                onPress={() => {
-                props.navigation.navigate("Profile");
-                }}
-            />
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 30 }}
+        >
+          <IconMaterialCommunityIcons
+            color={"white"}
+            size={30}
+            name="keyboard-backspace"
+            style={{ marginRight: 10 }}
+            onPress={() => {
+              props.navigation.navigate("Profile");
+            }}
+          />
         </View>
         <View style={container.formCenter}>
           <KeyboardAvoidingView
@@ -52,7 +98,6 @@ export default function ChangePass(props) {
             behavior="position"
             keyboardVerticalOffset={-70}
           >
-            
             <TextInput
               style={form.textInput}
               placeholder="Old Password"
@@ -64,6 +109,7 @@ export default function ChangePass(props) {
               style={form.textInput}
               placeholder="New Password"
               placeholderTextColor="gray"
+              secureTextEntry={true}
               onChangeText={(value) => handleChangeText("newpw", value)}
             />
             <TextInput
@@ -74,11 +120,7 @@ export default function ChangePass(props) {
               onChangeText={(value) => handleChangeText("repeatpw", value)}
             />
 
-            <PrimaryButton
-              onPress={() => {
-                console.log("Register button pressed");
-              }}
-            >
+            <PrimaryButton onPress={updatePass} isLoading={updatePassLoading}>
               Change
             </PrimaryButton>
           </KeyboardAvoidingView>

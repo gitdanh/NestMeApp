@@ -23,11 +23,23 @@ const tokenSlice = createSlice({
       state.fullname = action.payload.fullname;
       state.bio = action.payload.bio;
     },
+    updateUserProfileFields: (state, action) => {
+      state.avatar = action.payload?.avatar
+        ? action.payload?.avatar
+        : state.avatar;
+      state.fullname = action.payload.fullname;
+      state.bio = action.payload.bio;
+    },
     logoutUser(state) {
       state.accessToken = null;
     },
   },
 });
 
-export const { setAccessToken, setLoginInfo,logoutUser } = tokenSlice.actions;
+export const {
+  setAccessToken,
+  setLoginInfo,
+  updateUserProfileFields,
+  logoutUser,
+} = tokenSlice.actions;
 export default tokenSlice.reducer;

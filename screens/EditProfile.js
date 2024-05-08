@@ -20,7 +20,7 @@ import {
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { container, form } from "../styles/authStyle";
 import PrimaryButton from "../components/button/PrimaryButton";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { getAvatarSource } from "../utils/getImageSource";
 import IconMaterial from "react-native-vector-icons/MaterialIcons";
 import IconFeather from "react-native-vector-icons/Feather";
@@ -28,6 +28,15 @@ import AntDesign from "react-native-vector-icons/AntDesign";
 import { Audio } from "expo-av";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
+import { updateUserProfile } from "../services/userService";
+import usePrivateHttpClient from "../axios/private-http-hook";
+import { updateUserProfileFields } from "../store/redux/slices/authSlice";
+import {
+  getDownloadURL,
+  ref,
+  storage,
+  uploadBytesResumable,
+} from "../configs/firebase";
 
 const WINDOW_HEIGHT = Dimensions.get("window").height;
 const WINDOW_WIDTH = Dimensions.get("window").width;
@@ -35,7 +44,10 @@ const closeButtonSize = Math.floor(WINDOW_HEIGHT * 0.032);
 const captureSize = Math.floor(WINDOW_HEIGHT * 0.09);
 
 export default function EditProfile(props) {
+  const { privateRequest } = usePrivateHttpClient();
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.authenticate);
+
   const [avatar, setAvatar] = useState(user.avatar);
   const [fullname, setFullname] = useState(user.fullname);
   const [bio, setBio] = useState(user.bio);
@@ -53,6 +65,9 @@ export default function EditProfile(props) {
   const [galleryPickedImage, setGalleryPickedImage] = useState(null);
   const cameraRef = useRef();
   const isFocused = useIsFocused();
+  const [bioModified, setBioModified] = useState(false);
+  const [uploadProfileImgLoading, setUploadProfileImgLoading] = useState(false);
+  const [updateProfileLoading, setUpdateProfileLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -153,11 +168,96 @@ export default function EditProfile(props) {
 
     setAvatar(loadedAsset.localUri);
     setIsModalVisible(false);
+    onFileSelect(loadedAsset.localUri);
     // props.navigation.navigate('Save', {
     //     source: loadedAsset.localUri,
     //     type,
     //     imageSource
     // })
+  };
+
+  const onFileSelect = async (image) => {
+    setUploadProfileImgLoading(true);
+
+    const name = Date.now() + Math.random();
+    const storageRef = ref(storage, `images/${name}`);
+    const response = await fetch(image);
+    const blob = await response.blob();
+    const uploadTask = uploadBytesResumable(storageRef, blob);
+
+    const uploadPromise = new Promise((resolve, reject) => {
+      uploadTask.on(
+        "state_changed",
+        null,
+        (error) => {
+          console.log(error);
+          reject(error);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref)
+            .then((url) => {
+              console.log(url);
+              resolve(url);
+            })
+            .catch((error) => {
+              console.log(error);
+              reject(error);
+            });
+        }
+      );
+    });
+
+    try {
+      const url = await uploadPromise;
+
+      const urlString = url.toString();
+      const respone = await updateUserProfile(
+        { profile_picture: urlString },
+        privateRequest
+      );
+      if (respone?.message !== null) {
+        dispatch(updateUserProfileFields({ avatar: urlString }));
+        setUploadProfileImgLoading(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setUploadProfileImgLoading(false);
+    }
+  };
+
+  const removePhoto = async () => {
+    setUploadProfileImgLoading(true);
+    try {
+      const respone = await updateUserProfile(
+        { profile_picture: "" },
+        privateRequest
+      );
+      if (respone?.message !== null) {
+        dispatch(updateUserProfileFields({ avatar: "" }));
+        setUploadProfileImgLoading(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setUploadProfileImgLoading(false);
+    }
+  };
+
+  const updateBio = async () => {
+    setUpdateProfileLoading(true);
+    try {
+      const respone = await updateUserProfile(
+        { full_name: fullname, user_info: { bio: bio } },
+        privateRequest
+      );
+      if (respone?.message !== null) {
+        dispatch(updateUserProfileFields({ fullname: fullname, bio: bio }));
+        setBioModified(false);
+        setUpdateProfileLoading(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setUpdateProfileLoading(false);
+    }
   };
 
   const renderCaptureControl = () => (
@@ -275,7 +375,10 @@ export default function EditProfile(props) {
             <TextInput
               style={form.textInput}
               value={fullname}
-              onChangeText={(val) => setFullname(val)}
+              onChangeText={(val) => {
+                setFullname(val);
+                setBioModified(true);
+              }}
             />
             <Text
               style={{
@@ -296,10 +399,19 @@ export default function EditProfile(props) {
               multiline={true}
               placeholderTextColor="gray"
               value={bio}
-              onChangeText={(val) => setBio(val)}
+              onChangeText={(val) => {
+                setBio(val);
+                setBioModified(true);
+              }}
             />
 
-            <PrimaryButton>Confirm</PrimaryButton>
+            <PrimaryButton
+              onPress={updateBio}
+              isLoading={updateProfileLoading}
+              disabled={!bioModified}
+            >
+              Confirm
+            </PrimaryButton>
           </KeyboardAvoidingView>
         </View>
         <Modal

@@ -44,6 +44,22 @@ const ProfileHeader = ({ props, username }) => {
       { cancelable: false }
     );
   };
+
+  const openActions = () => {
+    Alert.alert("Actions", "Which actions do you want?", [
+      {
+        text: "Change password",
+        onPress: () => navigation.navigate("ChangePass"),
+      },
+      {
+        text: "Log out",
+        onPress: handleLogout,
+        style: "destructive",
+      },
+      { text: "Cancle", style: "cancel" },
+    ]);
+  };
+
   const [modalVisible, setModalVisible] = useState(false);
   return (
     <View
@@ -70,11 +86,11 @@ const ProfileHeader = ({ props, username }) => {
             color={"white"}
             size={25}
             name="menu"
-            onPress={() => setModalVisible(true)}
+            onPress={openActions}
           />
         </View>
       </View>
-      <Modal
+      {/* <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
@@ -115,7 +131,7 @@ const ProfileHeader = ({ props, username }) => {
             </Text>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
     </View>
   );
 };

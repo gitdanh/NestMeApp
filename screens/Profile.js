@@ -44,9 +44,12 @@ function Profile(props) {
         <View style={styles.container}>
           <ProfileHeader username={userData?.username} />
           <ProfileDetails
+            userId={userData?._id}
+            username={userData?.username}
             fullname={userData?.full_name}
             avatar={userData?.profile_picture}
             userInfo={userData?.user_info}
+            isFriend={userData?.is_friend}
             postsCount={userData?.posts_count}
             friendsCount={userData?.friends_count}
             friendRequestsCount={userData?.friend_requests_count}

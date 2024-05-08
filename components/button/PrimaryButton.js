@@ -12,6 +12,7 @@ function PrimaryButton({
   overwriteButtonStyle = {},
   overwriteTextStyle = {},
   isLoading = false,
+  disabled = false,
 }) {
   return (
     <View style={styles.buttonOuterContainer}>
@@ -23,7 +24,7 @@ function PrimaryButton({
         }
         onPress={onPress}
         android_ripple={{ color: "#0088E1" }}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
       >
         {isLoading ? (
           <ActivityIndicator color={"white"} />
