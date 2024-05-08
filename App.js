@@ -6,6 +6,7 @@ import CreateScreen from "./screens/Add";
 import GroupScreen from "./screens/Group";
 import GroupDetail from "./screens/GroupDetail";
 import SaveScreen from "./screens/Save";
+import ChangePass from "./screens/ChangePass";
 import EditProfileScreen from "./screens/EditProfile";
 import RegisterScreen from "./screens/auth/Register";
 import LoginScreen from "./screens/auth/Login";
@@ -66,6 +67,7 @@ function MainScreen() {
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Notify" component={NotifyScreen} />
       <Stack.Screen name="SingleChat" component={SingleChat} />
+      <Stack.Screen name="ChangePass" component={ChangePass} />
       <Stack.Screen name="Save" component={SaveScreen} />
       <Stack.Screen name="Edit" component={EditProfileScreen} />
       <Stack.Screen name="GroupDetail" component={GroupDetail} />

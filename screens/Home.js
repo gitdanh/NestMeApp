@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
+  Text,
   StyleSheet,
   Image,
   FlatList,
@@ -14,7 +15,8 @@ import usePrivateHttpClient from "../axios/private-http-hook";
 import { useSelector, useDispatch } from "react-redux";
 import { setSocket } from "../store/redux/slices/chatSlice";
 import { io } from "socket.io-client";
-
+import * as conversationService from "../services/conversationService";
+import * as notificationsService from "../services/notificationService";
 function Home(props) {
   const { privateRequest } = usePrivateHttpClient();
   const userId = useSelector((state) => state.authenticate.userId);
@@ -26,6 +28,118 @@ function Home(props) {
   const [hasMorePost, setHasMorePost] = useState(true);
   const [postsLoading, setPostsLoading] = useState(false);
   const [isEndReached, setIsEndReached] = useState(false);
+
+  
+  const [conversationUnread, setConversationUnread] = useState([]);
+  const [unreadMsg, setUnreadMsg] = useState(0);
+  const [unreadNotification, setUnreadNotification] = useState(0);
+  const [notification, setNotification] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (notification) {
+          // console.log(user?._id);
+          if (userId) {
+            const data = await notificationsService.getNotifications(
+              userId,
+              0
+            );
+            const unreadCount = data.filter(
+              (notification) => !notification.read
+            );
+            setUnreadNotification(unreadCount.length);
+            setNotification(data);
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchData();
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      let unread;
+      const fetchData = async () => {
+        try {
+          const data = await conversationService.getUserConversations(userId);
+          unread = data.filter((item) => item.unread === true);
+          setConversationUnread(unread);
+          setUnreadMsg(unread.length);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      fetchData();
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    const handleGetMsgNotification = async (data) => {
+      console.log("Nhận được message:", data);
+      console.log(conversationUnread);
+      if (checkCurrentChatIdRef.current === data.conversationId) {
+        dispatch({
+          type: "ADD_MESSAGE",
+          payload: data,
+        });
+      }
+      console.log(
+        conversationUnread.find((con) => con._id === data.conversationId)
+      );
+      if (!conversationUnread.find((con) => con._id === data.conversationId)) {
+        console.log("toi day chua");
+        setConversationUnread((prevCon) => [
+          ...prevCon,
+          { _id: data.conversationId },
+        ]);
+        setUnreadMsg((prevCount) => prevCount + 1);
+      }
+    };
+
+    socket.current?.on("msg-recieve", handleGetMsgNotification);
+
+    return () => {
+      // Hủy đăng ký sự kiện khi component unmount
+      socket.current?.off("msg-recieve", handleGetMsgNotification);
+    };
+  }, [socket.current, conversationUnread]);
+
+
+  useEffect(() => {
+    const handleGetNotification = async (data) => {
+      console.log("Nhận được thông báo:", data);
+      if (data.remove == true) {
+        setNotification((prevNotifications) =>
+          prevNotifications.filter(
+            (notification) => notification._id !== data.content_id
+          )
+        );
+      } else {
+        setNotification((prevNotifications) => [data, ...prevNotifications]);
+      }
+      const check = notification.find(
+        (notification) => notification._id === data.content_id
+      );
+      console.log(check);
+      console.log(check?.read);
+      if (!check?.read) {
+        if (!data.remove) setUnreadNotification((prevCount) => prevCount + 1);
+        else setUnreadNotification((prevCount) => prevCount - 1);
+      }
+      
+    };
+
+    socket.current?.on("getNotification", handleGetNotification);
+
+    return () => {
+      // Hủy đăng ký sự kiện khi component unmount
+      socket.current?.off("getNotification", handleGetNotification);
+    };
+  }, [socket.current]);
 
   useEffect(() => {
     if (userId) {
@@ -101,12 +215,48 @@ function Home(props) {
               style={{ marginRight: 10 }}
               onPress={() => props.navigation.navigate("Notify")}
             />
+            {unreadNotification > 0 ? (
+              <View
+                style={{
+                  position: "absolute",
+                  width: 13,
+                  height: 12,
+                  borderRadius: 50,
+                  backgroundColor: "rgb(255, 8, 8)",
+                  left: "25%",
+                  top: 0,
+                }}
+              ><Text style={{
+                color: "white",
+                fontSize: 9,
+                marginLeft: 4,
+                marginBottom: 2,
+              }}>5</Text></View>
+            ) : null}
             <IconAnt
               color={"#ffff"}
               size={25}
               name="message1"
               onPress={() => props.navigation.navigate("Chat")}
             />
+            {unreadMsg > 0 ? (
+              <View
+                style={{
+                  position: "absolute",
+                  width: 13,
+                  height: 12,
+                  borderRadius: 50,
+                  backgroundColor: "rgb(255, 8, 8)",
+                  left: "82%",
+                  top: 0,
+                }}
+              ><Text style={{
+                color: "white",
+                fontSize: 9,
+                marginLeft: 4,
+                marginBottom: 2,
+              }}>5</Text></View>
+            ) : null}
           </View>
         </View>
         {posts.length > 0 && (
