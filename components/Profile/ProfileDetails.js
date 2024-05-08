@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from "@react-navigation/native";
 import { getAvatarSource } from "../../utils/getImageSource";
 
 const ProfileDetails = ({
@@ -28,26 +28,17 @@ const ProfileDetails = ({
         />
         <View style={{ width: 75, alignItems: "center" }}>
           <Text style={{ fontSize: 24, fontWeight: "500", color: "white" }}>
-            {postsCount}
-          </Text>
-          <Text style={{ fontSize: 16, fontWeight: "500", color: "white" }}>
-            Posts
+            {postsCount} Posts
           </Text>
         </View>
         <View style={{ width: 75, alignItems: "center" }}>
           <Text style={{ fontSize: 24, fontWeight: "500", color: "white" }}>
-            {friendsCount}
-          </Text>
-          <Text style={{ fontSize: 16, fontWeight: "500", color: "white" }}>
-            Friends
+            {friendsCount} Friends
           </Text>
         </View>
         <View style={{ width: 75, alignItems: "center" }}>
           <Text style={{ fontSize: 24, fontWeight: "500", color: "white" }}>
-            {friendRequestsCount}
-          </Text>
-          <Text style={{ fontSize: 16, fontWeight: "500", color: "white" }}>
-            Requests
+            {friendRequestsCount} Requests
           </Text>
         </View>
       </View>
@@ -66,7 +57,10 @@ const ProfileDetails = ({
           marginHorizontal: 10,
         }}
       >
-        <TouchableOpacity style={{ flex: 1 }} onPress={() => navigation.navigate("Edit")}>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={() => navigation.navigate("Edit")}
+        >
           <Text
             style={{
               backgroundColor: "#1D1B1B",

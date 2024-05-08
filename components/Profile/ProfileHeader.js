@@ -6,7 +6,7 @@ import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector, useDispatch } from "react-redux";
-import { CommonActions, useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation } from "@react-navigation/native";
 import { logoutUser } from "../../store/redux/slices/authSlice";
 
 const ProfileHeader = ({ username }) => {
@@ -18,26 +18,23 @@ const ProfileHeader = ({ username }) => {
       [
         {
           text: "Cancel",
-          onPress: () => console.log("Cancel Pressed"),
           style: "cancel",
         },
         {
           text: "OK",
           onPress: async () => {
-            console.log("OK Pressed");
             try {
-                await AsyncStorage.removeItem("refreshToken");
-                dispatch(logoutUser());
+              await AsyncStorage.removeItem("refreshToken");
+              dispatch(logoutUser());
             } catch (error) {
-                console.error("Error removing refreshToken:", error);
-        
+              console.error("Error removing refreshToken:", error);
             }
           },
         },
       ],
       { cancelable: false }
     );
-  }
+  };
   return (
     <View
       style={{
@@ -65,7 +62,12 @@ const ProfileHeader = ({ username }) => {
             name="plus-square"
             style={{ marginRight: 10 }}
           />
-          <IconFeather color={"white"} size={25} name="menu" onPress={handleLogout}/>
+          <IconFeather
+            color={"white"}
+            size={25}
+            name="menu"
+            onPress={handleLogout}
+          />
         </View>
       </View>
     </View>
