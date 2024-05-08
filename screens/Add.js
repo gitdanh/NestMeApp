@@ -18,6 +18,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
 } from "react-native";
 const WINDOW_HEIGHT = Dimensions.get("window").height;
 const WINDOW_WIDTH = Dimensions.get("window").width;
@@ -457,7 +458,7 @@ const container = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "black",
-    //paddingTop: StatusBar.currentHeight || 100,
+    paddingTop: Platform.OS === "android" ? 50 : 0,
   },
   containerImage: {
     flex: 1 / 4,

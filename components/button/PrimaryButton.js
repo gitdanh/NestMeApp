@@ -1,10 +1,17 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 
 function PrimaryButton({
   children,
   onPress,
   overwriteButtonStyle = {},
   overwriteTextStyle = {},
+  isLoading = false,
 }) {
   return (
     <View style={styles.buttonOuterContainer}>
@@ -16,8 +23,15 @@ function PrimaryButton({
         }
         onPress={onPress}
         android_ripple={{ color: "#0088E1" }}
+        disabled={isLoading}
       >
-        <Text style={[styles.buttonText, overwriteTextStyle]}>{children}</Text>
+        {isLoading ? (
+          <ActivityIndicator color={"white"} />
+        ) : (
+          <Text style={[styles.buttonText, overwriteTextStyle]}>
+            {children}
+          </Text>
+        )}
       </Pressable>
     </View>
   );

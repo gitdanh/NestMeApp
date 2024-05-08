@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { Video } from "expo-av";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Dropdown } from 'react-native-element-dropdown';
+import { Dropdown } from "react-native-element-dropdown";
 import {
   ActivityIndicator,
   Image,
@@ -28,14 +28,9 @@ import { createPost } from "../services/postServices";
 import { useSelector, useDispatch } from "react-redux";
 
 const data = [
-  { label: 'Item 1', value: '1', search: 'Item 1' },
-  { label: 'Item 2', value: '2', search: 'Item 2' },
-  { label: 'Item 3', value: '3', search: 'Item 3' },
-  { label: 'Item 4', value: '4', search: 'Item 4' },
-  { label: 'Item 5', value: '5', search: 'Item 5' },
-  { label: 'Item 6', value: '6', search: 'Item 6' },
-  { label: 'Item 7', value: '7', search: 'Item 7' },
-  { label: 'Item 8', value: '8', search: 'Item 8' },
+  { label: "Everyone", value: "PUBLIC", search: "Public" },
+  { label: "Friends", value: "FRIENDS", search: "Friends" },
+  { label: "Private", value: "PRIVATE", search: "Private" },
 ];
 
 function Save(props) {
@@ -45,14 +40,13 @@ function Save(props) {
   const renderLabel = () => {
     if (value || isFocus) {
       return (
-        <Text style={[styles.label, isFocus && { color: 'blue' }]}>
-          Dropdown label
+        <Text style={[styles.label, isFocus && { color: "grey" }]}>
+          Visibility
         </Text>
       );
     }
     return null;
   };
-
 
   const privateHttpClient = usePrivateHttpClient();
   const [caption, setCaption] = useState("");
@@ -133,6 +127,7 @@ function Save(props) {
           message: "Create success",
         });
         setSnackBarOpen(true);
+        props.navigation.navigate("Home");
       }
     } catch (err) {
       setUploading(false);
@@ -142,8 +137,6 @@ function Save(props) {
       });
       setSnackBarOpen(true);
       console.log(err);
-    } finally {
-      props.navigation.navigate("Home");
     }
   };
 
@@ -250,6 +243,7 @@ function Save(props) {
                 color: "white",
                 fontSize: 14,
                 marginBottom: 20,
+                marginTop: 10,
               }}
               placeholder="Write your caption...."
               placeholderTextColor={"gray"}
@@ -259,21 +253,29 @@ function Save(props) {
             <View style={styles.container}>
               {renderLabel()}
               <Dropdown
-                style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+                style={[styles.dropdown, isFocus && { borderColor: "white" }]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
-                inputSearchStyle={styles.inputSearchStyle}
                 iconStyle={styles.iconStyle}
+                containerStyle={{
+                  backgroundColor: "black",
+                  borderColor: "black",
+                }}
+                itemContainerStyle={{
+                  borderBottomColor: "grey",
+                  borderBottomWidth: 0.5,
+                }}
+                itemTextStyle={{
+                  color: "white",
+                }}
+                activeColor="grey"
                 data={data}
                 autoScroll
-                search
                 maxHeight={300}
                 minHeight={100}
                 labelField="label"
                 valueField="value"
-                searchField="search"
-                placeholder={!isFocus ? 'Dropdown 1' : '...'}
-                searchPlaceholder="Search..."
+                placeholder={!isFocus ? "Visibility" : "..."}
                 value={value}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
@@ -281,14 +283,14 @@ function Save(props) {
                   setValue(item.value);
                   setIsFocus(false);
                 }}
-                renderLeftIcon={() => (
-                  <AntDesign
-                    style={styles.icon}
-                    color={isFocus ? 'blue' : 'black'}
-                    name="folderopen"
-                    size={20}
-                  />
-                )}
+                // renderLeftIcon={() => (
+                //   <AntDesign
+                //     style={styles.icon}
+                //     color={isFocus ? "grey" : "white"}
+                //     name="folderopen"
+                //     size={20}
+                //   />
+                // )}
               />
             </View>
 
@@ -371,22 +373,22 @@ const navbar = StyleSheet.create({
 });
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: "black",
     padding: 16,
   },
   dropdown: {
     height: 50,
-    borderColor: 'gray',
-    borderWidth: 0.5,
-    borderRadius: 8,
+    // borderColor: "gray",
+    // borderWidth: 0.5,
+    // borderRadius: 8,
     paddingHorizontal: 8,
   },
   icon: {
     marginRight: 5,
   },
   label: {
-    position: 'absolute',
-    backgroundColor: 'white',
+    position: "absolute",
+    backgroundColor: "black",
     left: 22,
     top: 8,
     zIndex: 999,
@@ -394,14 +396,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   placeholderStyle: {
+    color: "white",
     fontSize: 16,
   },
   selectedTextStyle: {
     fontSize: 16,
+    color: "white",
   },
   iconStyle: {
-    width: 20,
-    height: 20,
+    width: 30,
+    height: 30,
   },
   inputSearchStyle: {
     height: 40,
