@@ -42,7 +42,10 @@ function Profile(props) {
       <StatusBar style="light" />
       {userData && (
         <View style={styles.container}>
-          <ProfileHeader username={userData?.username} />
+          <ProfileHeader
+            username={userData?.username}
+            isOwnProfile={isOwnProfile}
+          />
           <ProfileDetails
             userId={userData?._id}
             username={userData?.username}
@@ -53,8 +56,12 @@ function Profile(props) {
             postsCount={userData?.posts_count}
             friendsCount={userData?.friends_count}
             friendRequestsCount={userData?.friend_requests_count}
+            isOwnProfile={isOwnProfile}
           />
-          <ProfilePosts username={userData?.username} />
+          <ProfilePosts
+            username={userData?.username}
+            isOwnProfile={isOwnProfile}
+          />
         </View>
       )}
     </>
