@@ -28,6 +28,8 @@ export default function Login(props) {
     password: "",
   });
 
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const handleChangeText = (key, value) => {
     setFormData({
       ...formData,
@@ -36,21 +38,26 @@ export default function Login(props) {
   };
 
   const onSignIn = async () => {
-    try {
-      const response = await pulicHttpRequest.publicRequest(
-        "/auth/mlogin",
-        "post",
-        formData,
-        { headers: { "Content-type": "application/json" } }
-      );
-      if (response.status !== 200) {
-        throw new Error("Đăng nhập thất bại");
-      }
+    if (!loginLoading) {
+      try {
+        setLoginLoading(true);
+        const response = await pulicHttpRequest.publicRequest(
+          "/auth/mlogin",
+          "post",
+          formData,
+          { headers: { "Content-type": "application/json" } }
+        );
+        if (response.status !== 200) {
+          throw new Error("Đăng nhập thất bại");
+        }
 
-      dispatch(setAccessToken(response.data.accessToken));
-      AsyncStorage.setItem("refreshToken", response.data.refreshToken);
-    } catch (error) {
-      Alert.alert("Lỗi", error.message);
+        dispatch(setAccessToken(response.data.accessToken));
+        AsyncStorage.setItem("refreshToken", response.data.refreshToken);
+        setLoginLoading(false);
+      } catch (error) {
+        Alert.alert("Lỗi", error.message);
+        setLoginLoading(false);
+      }
     }
   };
   return (
@@ -98,7 +105,9 @@ export default function Login(props) {
               onChangeText={(value) => handleChangeText("password", value)}
             />
 
-            <PrimaryButton onPress={onSignIn}>Sign In</PrimaryButton>
+            <PrimaryButton onPress={onSignIn} isLoading={loginLoading}>
+              Sign In
+            </PrimaryButton>
             <Text
               style={{
                 color: "#008ae6",

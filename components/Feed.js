@@ -32,6 +32,7 @@ import { getGroupCoverUrl } from "../utils/getGroupCoverUrl";
 
 const Feed = forwardRef(({ post, setPosts }, ref) => {
   const { privateRequest } = usePrivateHttpClient();
+  const socket = useSelector((state) => state.chat.socket);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const authUsername = useSelector((state) => state.authenticate.username);
@@ -75,14 +76,14 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
         { postId: post._id, emoji: "LOVE" },
         privateRequest
       );
-      // if (response) {
-      //   socket.current.emit("sendNotification", {
-      //     sender_id: user?._id,
-      //     receiver_id: props.userId,
-      //     content_id: props.postId,
-      //     type: "like",
-      //   });
-      // }
+      if (response) {
+        socket.current.emit("sendNotification", {
+          sender_id: authUserId,
+          receiver_id: post.creator._id,
+          content_id: post._id,
+          type: "like",
+        });
+      }
     } catch (err) {
       console.log("react post err: ", err);
     }

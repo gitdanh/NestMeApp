@@ -89,17 +89,24 @@ const Comment = forwardRef(
       inputRef.current.focus();
     };
 
-    const deleteThisPostComment = async () => {
+    const deleteThisPostComment = async (dComment, isReplyComment) => {
       if (!deleteCmtLoading) {
         try {
           setDeleteCmtLoading(true);
-          const response = await deletePostComment(comment._id, privateRequest);
+          const response = await deletePostComment(
+            dComment._id,
+            privateRequest
+          );
           if (response.message) {
-            setComments((prevComments) =>
-              prevComments.filter(
-                (prevComment) => prevComment._id !== comment._id
-              )
-            );
+            if (isReplyComment) {
+              deleteReplyComment(comment._id, dComment._id);
+            } else {
+              setComments((prevComments) =>
+                prevComments.filter(
+                  (prevComment) => prevComment._id !== dComment._id
+                )
+              );
+            }
 
             setDeleteCmtLoading(false);
           }
@@ -109,14 +116,23 @@ const Comment = forwardRef(
       }
     };
 
-    const handleDeletePostComment = () => {
+    const handleDeletePostComment = (dComment, isReplyComment = false) => {
       Alert.alert("Are you sure?", "Action cannot be undone!", [
         { text: "Cancle" },
-        { text: "Yes", onPress: deleteThisPostComment, style: "destructive" },
+        {
+          text: "Yes",
+          onPress: () => deleteThisPostComment(dComment, isReplyComment),
+          style: "destructive",
+        },
       ]);
     };
 
-    const rightSwipe = (progress, dragX, thisComment) => {
+    const rightSwipe = (
+      progress,
+      dragX,
+      thisComment,
+      isReplyComment = false
+    ) => {
       let totalWidth = authUsername === thisComment.user.username ? 120 : 60;
 
       const trans = dragX.interpolate({
@@ -172,7 +188,7 @@ const Comment = forwardRef(
                 [...rowRefs.entries()].forEach(([key, ref]) => {
                   ref.close();
                 });
-                handleDeletePostComment();
+                handleDeletePostComment(thisComment, isReplyComment);
               }}
               activeOpacity={0.7}
             >
@@ -310,7 +326,7 @@ const Comment = forwardRef(
                       }
                     }}
                     renderRightActions={(progress, dragX) =>
-                      rightSwipe(progress, dragX, item)
+                      rightSwipe(progress, dragX, item, true)
                     }
                     onSwipeableWillOpen={() => {
                       [...rowRefs.entries()].forEach(([key, ref]) => {

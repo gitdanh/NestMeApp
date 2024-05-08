@@ -20,9 +20,11 @@ import {
 } from "../../services/postServices";
 function Comments({ post }) {
   const { isLoading, privateRequest } = usePrivateHttpClient();
+  const socket = useSelector((state) => state.chat.socket);
 
   const [text, setText] = useState("");
   const avatar = useSelector((state) => state.authenticate.avatar);
+  const authUserId = useSelector((state) => state.authenticate.userId);
 
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -163,12 +165,12 @@ function Comments({ post }) {
             setReplyCommentId("");
             setText("");
             setInitialText("");
-            // socket.current.emit("sendNotification", {
-            //   sender_id: user?._id,
-            //   receiver_id: [props.userId],
-            //   content_id: props.postId,
-            //   type: "comment",
-            // });
+            socket.current.emit("sendNotification", {
+              sender_id: authUserId,
+              receiver_id: [post.creator._id],
+              content_id: post._id,
+              type: "comment",
+            });
             if (!isReply) setIsReply(false);
           }
         } else if (replyCommentId.trim() !== "") {
@@ -183,12 +185,12 @@ function Comments({ post }) {
             setReplyCommentId("");
             setText("");
             setInitialText("");
-            // socket.current.emit("sendNotification", {
-            //   sender_id: user?._id,
-            //   receiver_id: [props.userId],
-            //   content_id: props.postId,
-            //   type: "reply",
-            // });
+            socket.current.emit("sendNotification", {
+              sender_id: authUserId,
+              receiver_id: [post.creator._id],
+              content_id: post._id,
+              type: "reply",
+            });
             if (!isReply) setIsReply(false);
           }
         }

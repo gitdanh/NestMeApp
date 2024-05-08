@@ -15,6 +15,7 @@ import OTPInput from "../../components/OTPInput/OTPInput";
 
 export default function VerifyOTPResetPassword({ navigation, route }) {
   const pulicHttpRequest = useHttpClient();
+  const [loading, setLoading] = useState(false);
   const [otp, setOTP] = useState("");
   const { otpToken } = route.params;
   const [resetToken, setResetToken] = useState("");
@@ -22,55 +23,64 @@ export default function VerifyOTPResetPassword({ navigation, route }) {
   const [password, setPassword] = useState("");
 
   const handleVerifyOTP = async () => {
-    if (otp === "") {
-      Alert.alert("Error", "Please enter OTP");
-      return;
-    }
-    const formOTP = { otpToken, otp };
-
-    try {
-      const response = await pulicHttpRequest.publicRequest(
-        "/auth/mverifyResetOtp",
-        "post",
-        formOTP,
-        { headers: { "Content-type": "application/json" } }
-      );
-      if (response.data.reset_token || response.data.reset_token !== "") {
-        setResetToken(response.data.reset_token);
-        setIsOtpVerified(true);
+    if (!loading) {
+      if (otp === "") {
+        Alert.alert("Error", "Please enter OTP");
+        return;
       }
-    } catch (err) {
-      //console.error('Error registering:', error);
-      setIsOtpVerified(false);
-      Alert.alert("Error", "Invalid OTP. Please try again.");
+      const formOTP = { otpToken, otp };
+
+      try {
+        setLoading(true);
+        const response = await pulicHttpRequest.publicRequest(
+          "/auth/mverifyResetOtp",
+          "post",
+          formOTP,
+          { headers: { "Content-type": "application/json" } }
+        );
+        if (response.data.reset_token || response.data.reset_token !== "") {
+          setResetToken(response.data.reset_token);
+          setIsOtpVerified(true);
+          setLoading(false);
+        }
+      } catch (err) {
+        //console.error('Error registering:', error);
+        setIsOtpVerified(false);
+        Alert.alert("Error", "Invalid OTP. Please try again.");
+        setLoading(false);
+      }
     }
   };
 
   const handleChangePassword = async () => {
-    if (password === "") {
-      Alert.alert("Error", "Please enter new password!");
-      return;
-    }
-    const formNewPassword = { resetToken, password };
-
-    if (!resetToken || resetToken === "") {
-      setIsOtpVerified(false);
-      return;
-    }
-
-    try {
-      const response = await pulicHttpRequest.publicRequest(
-        "/auth/reset-password",
-        "patch",
-        formNewPassword,
-        { headers: { "Content-type": "application/json" } }
-      );
-      if (response.data.message) {
-        navigation.navigate("Login");
+    if (!loading) {
+      if (password === "") {
+        Alert.alert("Error", "Please enter new password!");
+        return;
       }
-    } catch (err) {
-      console.log("Error reset:", err);
-      Alert.alert("Error", "Error while reset password, please try again!");
+      const formNewPassword = { resetToken, password };
+
+      if (!resetToken || resetToken === "") {
+        setIsOtpVerified(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await pulicHttpRequest.publicRequest(
+          "/auth/reset-password",
+          "patch",
+          formNewPassword,
+          { headers: { "Content-type": "application/json" } }
+        );
+        if (response.data.message) {
+          navigation.navigate("Login");
+          setLoading(false);
+        }
+      } catch (err) {
+        Alert.alert("Error", "Error while reset password, please try again!");
+        setLoading(false);
+      }
     }
   };
 
@@ -113,6 +123,7 @@ export default function VerifyOTPResetPassword({ navigation, route }) {
             <PrimaryButton
               onPress={handleVerifyOTP}
               overwriteTextStyle={{ fontSize: 20 }}
+              isLoading={loading}
             >
               Verify OTP
             </PrimaryButton>
@@ -139,6 +150,7 @@ export default function VerifyOTPResetPassword({ navigation, route }) {
             <PrimaryButton
               onPress={handleChangePassword}
               overwriteTextStyle={{ fontSize: 20 }}
+              isLoading={loading}
             >
               Change password
             </PrimaryButton>

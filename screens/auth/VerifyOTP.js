@@ -15,27 +15,33 @@ export default function VerifyOTP({ navigation, route }) {
   const pulicHttpRequest = useHttpClient();
   const [otp, setOTP] = useState("");
   const { formData } = route.params;
+  const [loading, setLoading] = useState(false);
 
   const handleVerifyOTP = async () => {
-    if (otp === "") {
-      Alert.alert("Error", "Please enter OTP");
-      return;
-    }
-    const formWithOTP = { ...formData, otp };
-
-    try {
-      const response = await pulicHttpRequest.publicRequest(
-        "/auth/signup",
-        "post",
-        formWithOTP,
-        { headers: { "Content-type": "application/json" } }
-      );
-      if (response.data) {
-        navigation.navigate("Login");
+    if (!loading) {
+      if (otp === "") {
+        Alert.alert("Error", "Please enter OTP");
+        return;
       }
-    } catch (error) {
-      //console.error('Error registering:', error);
-      Alert.alert("Error", "Invalid OTP. Please try again.");
+      const formWithOTP = { ...formData, otp };
+
+      try {
+        setLoading(true);
+        const response = await pulicHttpRequest.publicRequest(
+          "/auth/signup",
+          "post",
+          formWithOTP,
+          { headers: { "Content-type": "application/json" } }
+        );
+        if (response.data) {
+          navigation.navigate("Login");
+          setLoading(false);
+        }
+      } catch (error) {
+        //console.error('Error registering:', error);
+        Alert.alert("Error", "Invalid OTP. Please try again.");
+        setLoading(false);
+      }
     }
   };
 
@@ -97,6 +103,7 @@ export default function VerifyOTP({ navigation, route }) {
         <PrimaryButton
           onPress={handleVerifyOTP}
           overwriteTextStyle={{ fontSize: 20 }}
+          isLoading={loading}
         >
           Verify OTP
         </PrimaryButton>

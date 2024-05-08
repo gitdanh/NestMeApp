@@ -20,6 +20,7 @@ const logo = require("../../assets/logo-white.png");
 
 export default function ForgotPassword(props) {
   const pulicHttpRequest = useHttpClient();
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
   const [formData, setFormData] = useState("");
@@ -32,25 +33,30 @@ export default function ForgotPassword(props) {
   };
 
   const onSubmit = async () => {
-    if (!formData) {
-      Alert.alert("Error", "Email or username is empty!");
-      return;
-    }
-    try {
-      const response = await pulicHttpRequest.publicRequest(
-        "/auth/mforgot-password",
-        "post",
-        { usernameOrEmail: formData },
-        { headers: { "Content-type": "application/json" } }
-      );
-
-      if (response.data.otp_token) {
-        props.navigation.navigate("VerifyOTPResetPassword", {
-          otpToken: response.data.otp_token,
-        });
+    if (!loading) {
+      if (!formData) {
+        Alert.alert("Error", "Email or username is empty!");
+        return;
       }
-    } catch (err) {
-      Alert.alert("Lỗi", err.message);
+      try {
+        setLoading(true);
+        const response = await pulicHttpRequest.publicRequest(
+          "/auth/mforgot-password",
+          "post",
+          { usernameOrEmail: formData },
+          { headers: { "Content-type": "application/json" } }
+        );
+
+        if (response.data.otp_token) {
+          props.navigation.navigate("VerifyOTPResetPassword", {
+            otpToken: response.data.otp_token,
+          });
+          setLoading(false);
+        }
+      } catch (err) {
+        Alert.alert("Lỗi", err.message);
+        setLoading(false);
+      }
     }
   };
   return (
@@ -101,7 +107,9 @@ export default function ForgotPassword(props) {
               onChangeText={(value) => setFormData(value)}
             />
 
-            <PrimaryButton onPress={onSubmit}>Submit</PrimaryButton>
+            <PrimaryButton onPress={onSubmit} isLoading={loading}>
+              Submit
+            </PrimaryButton>
             <Text
               style={{
                 color: "white",

@@ -62,9 +62,6 @@ function Save(props) {
   const user = {
     _id: userId,
   };
-  useEffect(() => {
-    console.log(props.route.params.source);
-  }, []);
 
   const { width } = useWindowDimensions();
 
@@ -106,20 +103,23 @@ function Save(props) {
       const urls = await Promise.allSettled(promises);
       const urlStrings = urls.map((url) => url.value.toString());
 
-      const postData = { title: caption, urlStrings };
+      const postData = { title: caption, urlStrings, visibility: value };
+
       const response = await createPost(
         postData,
         privateHttpClient.privateRequest
       );
 
       if (response !== null) {
-        createdPostId = response.post._id;
-        socket.current.emit("sendNotification", {
-          sender_id: user?._id,
-          receiver_id: user?.friends,
-          content_id: createdPostId,
-          type: "post",
-        });
+        if (response.post.visibility !== "PRIVATE") {
+          createdPostId = response.post._id;
+          socket.current.emit("sendNotification", {
+            sender_id: user?._id,
+            receiver_id: user?.friends,
+            content_id: createdPostId,
+            type: "post",
+          });
+        }
         setCaption("");
         setUploading(false);
         setSnackBarNotif({

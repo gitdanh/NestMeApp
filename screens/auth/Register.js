@@ -15,6 +15,7 @@ import useHttpClient from "../../axios/public-http-hook";
 const logo = require("../../assets/logo-white.png");
 export default function Register(props) {
   const pulicHttpRequest = useHttpClient();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -34,31 +35,36 @@ export default function Register(props) {
   };
 
   const sendOTP = async () => {
-    const { email, password, fullname, username } = formData;
-    if (!email || !password || !fullname || !username) {
-      Alert.alert("Error", "Please fill out everything");
-      return;
-    }
+    if (!loading) {
+      const { email, password, fullname, username } = formData;
+      if (!email || !password || !fullname || !username) {
+        Alert.alert("Error", "Please fill out everything");
+        return;
+      }
 
-    if (password.length < 6) {
-      Alert.alert("Error", "Passwords must be at least 6 characters");
-      return;
-    }
-    try {
-      const url = `/auth/signup/${username}/${email}`;
-      const response = pulicHttpRequest.publicRequest(url, "get");
+      if (password.length < 6) {
+        Alert.alert("Error", "Passwords must be at least 6 characters");
+        return;
+      }
+      try {
+        setLoading(true);
+        const url = `/auth/signup/${username}/${email}`;
+        const response = pulicHttpRequest.publicRequest(url, "get");
 
-      const otpToken = (await response).data.otpToken;
-      const formWithOtpToken = { ...formData, otpToken };
-      props.navigation.navigate("VerifyOTP", { formData: formWithOtpToken });
-    } catch (error) {
-      //console.error('Error registering:', error);
-      Alert.alert("Error", "Email already exists or not valid email format");
-      setIsValid({
-        bool: true,
-        boolSnack: true,
-        //message: 'Error registering. Please try again.',
-      });
+        const otpToken = (await response).data.otpToken;
+        const formWithOtpToken = { ...formData, otpToken };
+        props.navigation.navigate("VerifyOTP", { formData: formWithOtpToken });
+        setLoading(false);
+      } catch (error) {
+        //console.error('Error registering:', error);
+        Alert.alert("Error", "Email already exists or not valid email format");
+        setIsValid({
+          bool: true,
+          boolSnack: true,
+          //message: 'Error registering. Please try again.',
+        });
+        setLoading(false);
+      }
     }
   };
 
@@ -124,6 +130,7 @@ export default function Register(props) {
                 console.log("Register button pressed");
                 sendOTP();
               }}
+              isLoading={loading}
             >
               Register
             </PrimaryButton>
