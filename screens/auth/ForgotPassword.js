@@ -9,6 +9,7 @@ import {
   Alert,
   TouchableWithoutFeedback,
   Keyboard,
+  Platform,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { setAccessToken } from "../../store/redux/slices/authSlice";
@@ -71,6 +72,7 @@ export default function ForgotPassword(props) {
             style={{ flex: 1, justifyContent: "center" }}
             behavior="position"
             keyboardVerticalOffset={-70}
+            enabled={Platform.OS === "ios"}
           >
             {/* <View
               style={{

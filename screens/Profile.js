@@ -43,6 +43,7 @@ function Profile(props) {
       {userData && (
         <View style={styles.container}>
           <ProfileHeader
+            userId={userData?._id}
             username={userData?.username}
             isOwnProfile={isOwnProfile}
           />
@@ -57,6 +58,7 @@ function Profile(props) {
             friendsCount={userData?.friends_count}
             friendRequestsCount={userData?.friend_requests_count}
             isOwnProfile={isOwnProfile}
+            sentFriendRequest={userData?.is_friend_request_sent}
           />
           <ProfilePosts
             username={userData?.username}

@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
+  Platform,
 } from "react-native";
 import { container, form } from "../../styles/authStyle";
 import PrimaryButton from "../../components/button/PrimaryButton";
@@ -80,6 +81,7 @@ export default function Register(props) {
             style={{ flex: 1, justifyContent: "center" }}
             behavior="position"
             keyboardVerticalOffset={-70}
+            enabled={Platform.OS === "ios"}
           >
             <View
               style={{

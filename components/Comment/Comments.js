@@ -18,6 +18,7 @@ import {
   getPostComments,
   replyComment,
 } from "../../services/postServices";
+import { getAvatarSource } from "../../utils/getImageSource";
 function Comments({ post }) {
   const { isLoading, privateRequest } = usePrivateHttpClient();
   const socket = useSelector((state) => state.chat.socket);
@@ -267,11 +268,7 @@ function Comments({ post }) {
           }}
         >
           <View>
-            <Avatar
-              source={avatar === "" ? defaultAvatar : { uri: avatar }}
-              rounded
-              size={40}
-            />
+            <Avatar source={getAvatarSource(avatar)} rounded size={40} />
           </View>
           <TextInput
             ref={inputRef}

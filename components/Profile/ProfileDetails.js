@@ -17,6 +17,7 @@ import {
   getUserFriendsListByUsername,
   rejectAddFriend,
   sendAddFriend,
+  unFriend,
 } from "../../services/userService";
 import IconAnt from "react-native-vector-icons/AntDesign";
 import { useSelector } from "react-redux";
@@ -231,10 +232,12 @@ const ProfileDetails = ({
   friendsCount,
   friendRequestsCount,
   isOwnProfile,
+  sentFriendRequest,
 }) => {
   const navigation = useNavigation();
   const { privateRequest } = usePrivateHttpClient();
   const myUserId = useSelector((state) => state.authenticate.userId);
+  const socket = useSelector((state) => state.chat.socket);
 
   const [listType, setListType] = useState(0);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -245,6 +248,10 @@ const ProfileDetails = ({
   const [friendsPage, setFriendsPage] = useState(1);
   const [modal, setModal] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
+
+  const [isSentFriendRequest, setIsSentFriendRequest] =
+    useState(sentFriendRequest);
+  const [friendButtonLoading, setFriendButtonLoading] = useState(false);
 
   const getFriends = useCallback(async () => {
     console.log("friends load");
@@ -318,6 +325,55 @@ const ProfileDetails = ({
     );
   }, []);
 
+  const handleAddFriend = async () => {
+    try {
+      setFriendButtonLoading(true);
+      const response = await sendAddFriend(userId, privateRequest);
+      if (response.message) setIsSentFriendRequest(true);
+      setFriendButtonLoading(false);
+    } catch (err) {
+      setFriendButtonLoading(false);
+      console.error(err.message);
+    } finally {
+      socket.current.emit("sendNotification", {
+        sender_id: myUserId,
+        receiver_id: [userId],
+        type: "request",
+      });
+    }
+  };
+
+  const handleUnFriend = async () => {
+    if (unFQuestion) {
+      handleUnfriendQuestion();
+      try {
+        setFriendButtonLoading(true);
+        const response = await unFriend(userId, privateRequest);
+        if (response.message)
+          setUserData((prev) => ({ ...prev, is_friend: false }));
+        setFriendButtonLoading(false);
+      } catch (err) {
+        setFriendButtonLoading(false);
+        console.error(err.message);
+      }
+    }
+  };
+
+  const handleRemoveRequest = async () => {
+    try {
+      const response = await removeAddFriend(userId, privateRequest);
+      if (response.message) setIsSentFriendRequest(false);
+    } catch (err) {
+      console.error(err.message);
+    } finally {
+      socket.current.emit("sendNotification", {
+        sender_id: myUserId,
+        receiver_id: [userId],
+        type: "remove",
+      });
+    }
+  };
+
   return (
     <View style={{ paddingHorizontal: 15 }}>
       <View
@@ -357,23 +413,25 @@ const ProfileDetails = ({
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={{ width: 75, alignItems: "center" }}>
-          <TouchableOpacity
-            style={{ alignItems: "center" }}
-            onPress={() => {
-              getFriendRequests();
-              setListType(2);
-              setModal(true);
-            }}
-          >
-            <Text style={{ fontSize: 24, fontWeight: "500", color: "white" }}>
-              {friendRequestsCount}
-            </Text>
-            <Text style={{ fontSize: 16, fontWeight: "500", color: "white" }}>
-              Requests
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {isOwnProfile && (
+          <View style={{ width: 75, alignItems: "center" }}>
+            <TouchableOpacity
+              style={{ alignItems: "center" }}
+              onPress={() => {
+                getFriendRequests();
+                setListType(2);
+                setModal(true);
+              }}
+            >
+              <Text style={{ fontSize: 24, fontWeight: "500", color: "white" }}>
+                {friendRequestsCount}
+              </Text>
+              <Text style={{ fontSize: 16, fontWeight: "500", color: "white" }}>
+                Requests
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
       <Text style={{ fontSize: 18, fontWeight: "400", color: "white" }}>
         {fullname}
@@ -390,26 +448,83 @@ const ProfileDetails = ({
           marginHorizontal: 10,
         }}
       >
-        <TouchableOpacity
-          style={{ flex: 1 }}
-          onPress={() => navigation.navigate("Edit")}
-        >
-          <Text
-            style={{
-              backgroundColor: "#1D1B1B",
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 5,
-              textAlign: "center",
-              color: "white",
-              fontSize: 14,
-              fontWeight: "400",
-              color: "white",
-            }}
+        {isOwnProfile ? (
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            onPress={() => navigation.navigate("Edit")}
           >
-            Edit Profile
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={{
+                backgroundColor: "#1D1B1B",
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 5,
+                textAlign: "center",
+                color: "white",
+                fontSize: 14,
+                fontWeight: "400",
+                color: "white",
+              }}
+            >
+              Edit Profile
+            </Text>
+          </TouchableOpacity>
+        ) : isFriend ? (
+          <TouchableOpacity style={{ flex: 1 }} onPress={handleUnFriend}>
+            <Text
+              style={{
+                backgroundColor: "#1D1B1B",
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 5,
+                textAlign: "center",
+                color: "white",
+                fontSize: 14,
+                fontWeight: "400",
+                color: "white",
+              }}
+            >
+              Friends
+            </Text>
+          </TouchableOpacity>
+        ) : isSentFriendRequest ? (
+          <TouchableOpacity style={{ flex: 1 }} onPress={handleRemoveRequest}>
+            <Text
+              style={{
+                backgroundColor: "#1D1B1B",
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 5,
+                textAlign: "center",
+                color: "white",
+                fontSize: 14,
+                fontWeight: "400",
+                color: "white",
+              }}
+            >
+              Sent
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={{ flex: 1 }} onPress={handleAddFriend}>
+            <Text
+              style={{
+                borderRadius: 10,
+                backgroundColor: "#0095f6",
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 5,
+                textAlign: "center",
+                color: "white",
+                fontSize: 14,
+                fontWeight: "400",
+                color: "white",
+              }}
+            >
+              Add Friend
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
       <Modal
         visible={modal}

@@ -27,7 +27,7 @@ const captureSize = Math.floor(WINDOW_HEIGHT * 0.09);
 
 export default function VideoScreen(props) {
   const [hasPermission, setHasPermission] = useState(null);
-  const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
+  const [cameraType, setCameraType] = useState(Camera.Constants?.Type.back);
   const [isPreview, setIsPreview] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isFlash, setIsFlash] = useState(false);
@@ -52,13 +52,14 @@ export default function VideoScreen(props) {
         audioPermissions.status === "granted" &&
         galleryPermissions.status === "granted"
       ) {
-        const getPhotos = await MediaLibrary.getAssetsAsync({
+        const { assets: getPhotos } = await MediaLibrary.getAssetsAsync({
           sortBy: ["creationTime"],
           mediaType: ["photo", "video"],
+          first: 100,
         });
         setGalleryItems(getPhotos);
-        setGalleryPickedImage(getPhotos.assets[0]);
-        setPickedImages([getPhotos.assets[0]]);
+        setGalleryPickedImage(getPhotos[0]);
+        setPickedImages([getPhotos[0]]);
         setHasPermission(true);
       }
     })();
@@ -123,9 +124,9 @@ export default function VideoScreen(props) {
       return;
     }
     setCameraType((prevCameraType) =>
-      prevCameraType === Camera.Constants.Type.back
-        ? Camera.Constants.Type.front
-        : Camera.Constants.Type.back
+      prevCameraType === Camera.Constants?.Type.back
+        ? Camera.Constants?.Type.front
+        : Camera.Constants?.Type.back
     );
   };
   const handleGoToSaveOnGalleryPick = async () => {
@@ -322,7 +323,7 @@ export default function VideoScreen(props) {
           <FlatList
             numColumns={4}
             horizontal={false}
-            data={galleryItems.assets}
+            data={galleryItems}
             contentContainerStyle={{
               flexGrow: 1,
             }}
@@ -405,8 +406,8 @@ export default function VideoScreen(props) {
             type={cameraType}
             flashMode={
               isFlash
-                ? Camera.Constants.FlashMode.torch
-                : Camera.Constants.FlashMode.off
+                ? Camera.Constants?.FlashMode.torch
+                : Camera.Constants?.FlashMode.off
             }
             styles={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}
             ratio={"1:1"}

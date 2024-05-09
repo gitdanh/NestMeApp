@@ -16,10 +16,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector, useDispatch } from "react-redux";
 import { CommonActions, useNavigation } from "@react-navigation/native";
 import { logoutUser } from "../../store/redux/slices/authSlice";
+import * as conversationService from "../../services/conversationService";
 
-const ProfileHeader = ({ props, username }) => {
+const ProfileHeader = ({ props, userId, username, isOwnProfile }) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+
+  const authUserId = useSelector((state) => state.authenticate.userId);
+  const avatar = useSelector((state) => state.authenticate.avatar);
+  const user = {
+    _id: authUserId,
+    avatar: avatar,
+  };
+
   const handleLogout = () => {
     Alert.alert(
       "Logout",
@@ -45,19 +54,47 @@ const ProfileHeader = ({ props, username }) => {
     );
   };
 
+  const handleMessage = async () => {
+    try {
+      const newConversation = {
+        userIds: [user._id, userId],
+      };
+      const con = await conversationService.createConversation(newConversation);
+
+      if (con) {
+        navigation.navigate("Chat");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const openActions = () => {
-    Alert.alert("Actions", "Which actions do you want?", [
+    const actions = [
+      isOwnProfile
+        ? {
+            text: "Change password",
+            onPress: () => navigation.navigate("ChangePass"),
+          }
+        : {
+            text: "Message",
+            onPress: handleMessage,
+          },
       {
-        text: "Change password",
-        onPress: () => navigation.navigate("ChangePass"),
+        text: "Cancle",
+        style: "cancel",
       },
-      {
+    ];
+
+    if (isOwnProfile) {
+      actions.push({
         text: "Log out",
         onPress: handleLogout,
         style: "destructive",
-      },
-      { text: "Cancle", style: "cancel" },
-    ]);
+      });
+    }
+
+    Alert.alert("Actions", "Which actions do you want?", actions);
   };
 
   const [modalVisible, setModalVisible] = useState(false);

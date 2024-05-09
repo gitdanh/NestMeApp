@@ -29,7 +29,6 @@ function Home(props) {
   const [postsLoading, setPostsLoading] = useState(false);
   const [isEndReached, setIsEndReached] = useState(false);
 
-  
   const [conversationUnread, setConversationUnread] = useState([]);
   const [unreadMsg, setUnreadMsg] = useState(0);
   const [unreadNotification, setUnreadNotification] = useState(0);
@@ -41,10 +40,7 @@ function Home(props) {
         if (notification) {
           // console.log(user?._id);
           if (userId) {
-            const data = await notificationsService.getNotifications(
-              userId,
-              0
-            );
+            const data = await notificationsService.getNotifications(userId, 0);
             const unreadCount = data.filter(
               (notification) => !notification.read
             );
@@ -108,7 +104,6 @@ function Home(props) {
     };
   }, [socket.current, conversationUnread]);
 
-
   useEffect(() => {
     const handleGetNotification = async (data) => {
       console.log("Nhận được thông báo:", data);
@@ -130,7 +125,6 @@ function Home(props) {
         if (!data.remove) setUnreadNotification((prevCount) => prevCount + 1);
         else setUnreadNotification((prevCount) => prevCount - 1);
       }
-      
     };
 
     socket.current?.on("getNotification", handleGetNotification);
@@ -213,7 +207,10 @@ function Home(props) {
               size={25}
               name="hearto"
               style={{ marginRight: 10 }}
-              onPress={() => props.navigation.navigate("Notify")}
+              onPress={async () => {
+                await notificationsService.addReader();
+                props.navigation.navigate("Notify");
+              }}
             />
             {unreadNotification > 0 ? (
               <View
@@ -226,12 +223,18 @@ function Home(props) {
                   left: "25%",
                   top: 0,
                 }}
-              ><Text style={{
-                color: "white",
-                fontSize: 9,
-                marginLeft: 4,
-                marginBottom: 2,
-              }}>5</Text></View>
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 9,
+                    marginLeft: 4,
+                    marginBottom: 2,
+                  }}
+                >
+                  {unreadNotification}
+                </Text>
+              </View>
             ) : null}
             <IconAnt
               color={"#ffff"}
@@ -250,12 +253,18 @@ function Home(props) {
                   left: "82%",
                   top: 0,
                 }}
-              ><Text style={{
-                color: "white",
-                fontSize: 9,
-                marginLeft: 4,
-                marginBottom: 2,
-              }}>5</Text></View>
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 9,
+                    marginLeft: 4,
+                    marginBottom: 2,
+                  }}
+                >
+                  {unreadMsg}
+                </Text>
+              </View>
             ) : null}
           </View>
         </View>
