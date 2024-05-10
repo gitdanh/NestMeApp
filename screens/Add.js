@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Audio } from "expo-av";
-import { Camera } from "expo-camera";
+import { Camera } from "expo-camera/legacy";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import * as VideoThumbnails from "expo-video-thumbnails";
@@ -20,6 +20,7 @@ import {
   View,
   Platform,
 } from "react-native";
+
 const WINDOW_HEIGHT = Dimensions.get("window").height;
 const WINDOW_WIDTH = Dimensions.get("window").width;
 const closeButtonSize = Math.floor(WINDOW_HEIGHT * 0.032);
@@ -27,7 +28,7 @@ const captureSize = Math.floor(WINDOW_HEIGHT * 0.09);
 
 export default function VideoScreen(props) {
   const [hasPermission, setHasPermission] = useState(null);
-  const [cameraType, setCameraType] = useState(Camera.Constants?.Type.back);
+  const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
   const [isPreview, setIsPreview] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isFlash, setIsFlash] = useState(false);
@@ -57,9 +58,21 @@ export default function VideoScreen(props) {
           mediaType: ["photo", "video"],
           first: 100,
         });
-        setGalleryItems(getPhotos);
-        setGalleryPickedImage(getPhotos[0]);
-        setPickedImages([getPhotos[0]]);
+
+        const modifiedUriPhotos = await Promise.all(
+          getPhotos.map(async (getPhoto) => {
+            let uri = getPhoto.uri;
+            if (Platform.OS === "ios") {
+              const assetInfo = await MediaLibrary.getAssetInfoAsync(getPhoto);
+              uri = assetInfo.localUri;
+            }
+            return { ...getPhoto, uri };
+          })
+        );
+
+        setGalleryItems(modifiedUriPhotos);
+        setGalleryPickedImage(modifiedUriPhotos[0]);
+        setPickedImages([modifiedUriPhotos[0]]);
         setHasPermission(true);
       }
     })();
@@ -124,9 +137,9 @@ export default function VideoScreen(props) {
       return;
     }
     setCameraType((prevCameraType) =>
-      prevCameraType === Camera.Constants?.Type.back
-        ? Camera.Constants?.Type.front
-        : Camera.Constants?.Type.back
+      prevCameraType === Camera.Constants.Type.back
+        ? Camera.Constants.Type.front
+        : Camera.Constants.Type.back
     );
   };
   const handleGoToSaveOnGalleryPick = async () => {
@@ -345,7 +358,6 @@ export default function VideoScreen(props) {
                       prev.filter((image) => image !== item)
                     );
                   else setPickedImages((prev) => [...prev, item]);
-                  console.log(pickedImages);
                 }}
               >
                 <Image style={container.image} source={{ uri: item.uri }} />
@@ -406,8 +418,8 @@ export default function VideoScreen(props) {
             type={cameraType}
             flashMode={
               isFlash
-                ? Camera.Constants?.FlashMode.torch
-                : Camera.Constants?.FlashMode.off
+                ? Camera.Constants.FlashMode.torch
+                : Camera.Constants.FlashMode.off
             }
             styles={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}
             ratio={"1:1"}

@@ -26,7 +26,7 @@ import IconMaterial from "react-native-vector-icons/MaterialIcons";
 import IconFeather from "react-native-vector-icons/Feather";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { Audio } from "expo-av";
-import { Camera } from "expo-camera";
+import { Camera, CameraView } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import { updateUserProfile } from "../services/userService";
 import usePrivateHttpClient from "../axios/private-http-hook";
@@ -53,7 +53,7 @@ export default function EditProfile(props) {
   const [bio, setBio] = useState(user.bio);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
-  const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
+  const [cameraType, setCameraType] = useState("back");
   const [isPreview, setIsPreview] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isFlash, setIsFlash] = useState(false);
@@ -150,9 +150,7 @@ export default function EditProfile(props) {
       return;
     }
     setCameraType((prevCameraType) =>
-      prevCameraType === Camera.Constants.Type.back
-        ? Camera.Constants.Type.front
-        : Camera.Constants.Type.back
+      prevCameraType === "back" ? "front" : "back"
     );
   };
   const handleGoToSaveOnGalleryPick = async () => {
@@ -578,15 +576,11 @@ export default function EditProfile(props) {
               >
                 <View style={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}>
                   {isFocused ? (
-                    <Camera
+                    <CameraView
                       ref={cameraRef}
                       style={{ flex: 1 }}
-                      type={cameraType}
-                      flashMode={
-                        isFlash
-                          ? Camera.Constants.FlashMode.torch
-                          : Camera.Constants.FlashMode.off
-                      }
+                      facing={cameraType}
+                      flash="auto"
                       styles={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}
                       ratio={"1:1"}
                       onCameraReady={onCameraReady}
