@@ -496,7 +496,7 @@ const SingleChat = (props) => {
           />
           <View>
             <Avatar
-              source={data.img === "" ? defaultAvatar : { uri: data.img }}
+              source={data?.img === "" ? defaultAvatar : { uri: data?.img }}
               rounded
               title={"duong"}
               size="small"
@@ -543,6 +543,7 @@ const SingleChat = (props) => {
         enabled={Platform.OS === "ios"}
       >
         {loadMore  && page > 1 && <ActivityIndicator />}
+        {msg &&
         <FlatList
           style={{ flex: 1 }}
           data={msg}
@@ -562,7 +563,7 @@ const SingleChat = (props) => {
           }}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.1}
-        />
+        />}
 
         <View
           style={{

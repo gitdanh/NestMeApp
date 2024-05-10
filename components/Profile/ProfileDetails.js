@@ -672,7 +672,7 @@ const ProfileDetails = ({
             </>
           )}
         </View>
-      </Modal>
+      </Modal> 
     </View>
   );
 };

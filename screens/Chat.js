@@ -221,12 +221,13 @@ function Chat(props) {
     };
 
     const renderItems = ({ item }) => {
-      console.log(item.is_deleted)
-      if(!item.is_deleted.deleted)
+      console.log(item?.is_deleted)
+      if(!item?.is_deleted.deleted)
         return (
           <ListItem
             containerStyle={styles.listItem}
             onPress={() => {navigation.navigate('SingleChat', { data: item });
+              console.log(item);
               setConversations((prevConversations) => {
                 return prevConversations.map((con) => {
                   if (con._id == item._id) {
