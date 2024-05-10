@@ -240,7 +240,10 @@ function Home(props) {
               color={"#ffff"}
               size={25}
               name="message1"
-              onPress={() => props.navigation.navigate("Chat")}
+              onPress={async () => {
+                await notificationsService.addReader();
+                props.navigation.navigate("Chat");
+              }}
             />
             {unreadMsg > 0 ? (
               <View

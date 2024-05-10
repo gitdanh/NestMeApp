@@ -394,6 +394,7 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
               {post.content}
             </Text>
           </Text>
+          <Text style={{color: "#A8A8A8", marginBottom: 6}} onPress={() => setIsModalVisible(true)}> See 2 Comments</Text>
         </View>
       ) : (
         <View
@@ -406,6 +407,7 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
               {post.content}
             </Text>
           </Text>
+          <Text style={{color: "#A8A8A8", marginBottom: 6}} onPress={() => setIsModalVisible(true)}> See 2 Comments</Text>
         </View>
       )}
 

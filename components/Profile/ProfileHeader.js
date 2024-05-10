@@ -116,7 +116,7 @@ const ProfileHeader = ({ props, userId, username, isOwnProfile }) => {
       >
         <Text style={{ fontSize: 24, fontWeight: "500", color: "white" }}>
           {" "}
-          {username}
+          {userData?.username}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <IconFeather
