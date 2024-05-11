@@ -13,6 +13,7 @@ import { updateMessageRemoves } from "../store/redux/slices/chatSlice";
 
 function Chat(props) {
   const [conversations, setConversations] = useState([]);
+  const { text = 'Default Text' } = props;
   
   const userId = useSelector((state) => state.authenticate.userId);
   const username = useSelector((state) => state.authenticate.username);
@@ -240,7 +241,7 @@ function Chat(props) {
             }}
           >
             <View>
-              <Avatar source={item.img === ""
+              <Avatar source={item?.img === ""
                         ? defaultAvatar : { uri: item.img }} rounded title={item.name} size="medium" />
               {}
               {item.online ? 
@@ -249,9 +250,9 @@ function Chat(props) {
             </View>
             <ListItem.Content>
               <ListItem.Title style={item.unread ? { fontSize: 15, color: '#fff', fontWeight: "800"} : styles.name}>{item.name}</ListItem.Title>
-              <ListItem.Subtitle style={item.unread ? { fontSize: 13, color: '#fff', fontWeight: "800"} : styles.subtitle} numberOfLines={1}>
+              {item.lastMsg && <ListItem.Subtitle style={item.unread ? { fontSize: 13, color: '#fff', fontWeight: "800"} : styles.subtitle} numberOfLines={1}>
                 {item.lastMsg}
-              </ListItem.Subtitle>
+              </ListItem.Subtitle>}
             </ListItem.Content>
             {item.unread ? (<View style={{ width: 10, height: 10, marginRight: 10, borderRadius: 50, backgroundColor: "#0095f6"}}></View>):null}
           </ListItem>

@@ -32,7 +32,7 @@ import defaultAvatar from "../assets/default-avatar.jpg";
 import { useSelector, useDispatch } from "react-redux";
 import { calculatedTime } from "../utils/calculatedTime";
 import { Audio } from "expo-av";
-import { Camera } from "expo-camera";
+import { Camera } from "expo-camera/legacy";
 import * as MediaLibrary from 'expo-media-library';
 import { useIsFocused } from '@react-navigation/native';
 import { container, utils } from "../styles/authStyle";
