@@ -388,7 +388,7 @@ function GroupDetail(props) {
       setDetailLoading(true);
       const respone = await get1Group(groupId, privateRequest);
       if (respone) {
-        setData(respone.group_detail);
+        setData({ ...respone.group_detail, _id: groupId });
         setDetailLoading(false);
       }
     } catch (err) {
@@ -528,7 +528,9 @@ function GroupDetail(props) {
       data.is_group_admin
         ? {
             text: "Edit group information",
-            onPress: () => {navigation.navigate("EditGroup", { group: data })},
+            onPress: () => {
+              navigation.navigate("EditGroup", { group: data });
+            },
           }
         : {
             text: "Leave group",

@@ -16,6 +16,7 @@ import {
   ScrollView,
   FlatList,
   StatusBar,
+  Platform,
 } from "react-native";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { container, form } from "../styles/authStyle";
@@ -84,8 +85,20 @@ export default function EditProfile(props) {
           sortBy: ["creationTime"],
           mediaType: ["photo", "video"],
         });
-        setGalleryItems(getPhotos);
-        setGalleryPickedImage(getPhotos.assets[0]);
+
+        const modifiedUriPhotos = await Promise.all(
+          getPhotos.assets.map(async (getPhoto) => {
+            let uri = getPhoto.uri;
+            if (Platform.OS === "ios") {
+              const assetInfo = await MediaLibrary.getAssetInfoAsync(getPhoto);
+              uri = assetInfo.localUri;
+            }
+            return { ...getPhoto, uri };
+          })
+        );
+
+        setGalleryItems(modifiedUriPhotos);
+        setGalleryPickedImage(modifiedUriPhotos[0]);
         setHasPermission(true);
       }
     })();
@@ -532,7 +545,7 @@ export default function EditProfile(props) {
                       scrollEnabled={false}
                       numColumns={3}
                       horizontal={false}
-                      data={galleryItems.assets}
+                      data={galleryItems}
                       contentContainerStyle={{
                         flexGrow: 1,
                       }}

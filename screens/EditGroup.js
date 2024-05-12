@@ -16,6 +16,7 @@ import {
   ScrollView,
   FlatList,
   StatusBar,
+  Platform,
 } from "react-native";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { container, form } from "../styles/authStyle";
@@ -84,13 +85,24 @@ export default function EditGroup(props) {
           sortBy: ["creationTime"],
           mediaType: ["photo", "video"],
         });
-        setGalleryItems(getPhotos);
-        setGalleryPickedImage(getPhotos.assets[0]);
+
+        const modifiedUriPhotos = await Promise.all(
+          getPhotos.assets.map(async (getPhoto) => {
+            let uri = getPhoto.uri;
+            if (Platform.OS === "ios") {
+              const assetInfo = await MediaLibrary.getAssetInfoAsync(getPhoto);
+              uri = assetInfo.localUri;
+            }
+            return { ...getPhoto, uri };
+          })
+        );
+        setGalleryItems(modifiedUriPhotos);
+        setGalleryPickedImage(modifiedUriPhotos[0]);
         setHasPermission(true);
       }
     })();
   }, []);
-  
+
   const onCameraReady = () => {
     setIsCameraReady(true);
   };
@@ -163,11 +175,10 @@ export default function EditGroup(props) {
     if (type == 0) {
       imageSource = await generateThumbnail(galleryPickedImage.uri);
     }
-    console.log(loadedAsset.localUri)
-    
+
     setAvatar(loadedAsset.localUri);
     setIsModalVisible(false);
-    onFileSelect(loadedAsset.localUri);
+    await onFileSelect(loadedAsset.localUri);
     // props.navigation.navigate('Save', {
     //     source: loadedAsset.localUri,
     //     type,
@@ -210,17 +221,15 @@ export default function EditGroup(props) {
       const url = await uploadPromise;
 
       const urlString = url.toString();
-      editData = {
+      const editData = {
         name: fullname,
         description: bio,
         cover: urlString,
         groupId: group._id,
       };
-      const respone = await editGroup(
-        editData,
-        privateRequest
-      );
-      if (respone?.message !== null) {
+
+      const respone = await editGroup(editData, privateRequest);
+      if (respone) {
         dispatch(updateUserProfileFields({ avatar: urlString }));
         setUploadProfileImgLoading(false);
       }
@@ -251,21 +260,18 @@ export default function EditGroup(props) {
     setUpdateProfileLoading(true);
 
     try {
-      const  editData = {
-          name: fullname,
-          description: bio,
-          cover: avatar,
-          groupId: group._id,
+      const editData = {
+        name: fullname,
+        description: bio,
+        cover: avatar,
+        groupId: group._id,
       };
-      
+
       console.log(editData);
-      const result = await editGroup(
-        editData,
-        privateRequest
-      );
-      
+      const result = await editGroup(editData, privateRequest);
+
       if (result !== null) {
-        console.log(result)
+        console.log(result);
         setBioModified(false);
         setUpdateProfileLoading(false);
       }
@@ -369,7 +375,11 @@ export default function EditGroup(props) {
                   borderRadius: 50,
                   margin: 10,
                 }}
-                source={avatar.substring(0,4)==="file" ? {uri: avatar} :getGroupCoverUrl(avatar)}
+                source={
+                  avatar.substring(0, 4) === "file"
+                    ? { uri: avatar }
+                    : getGroupCoverUrl(avatar)
+                }
               />
               <Text
                 style={{ fontSize: 16, fontWeight: "500", color: "#0095f6" }}
@@ -550,7 +560,7 @@ export default function EditGroup(props) {
                       scrollEnabled={false}
                       numColumns={3}
                       horizontal={false}
-                      data={galleryItems.assets}
+                      data={galleryItems}
                       contentContainerStyle={{
                         flexGrow: 1,
                       }}
