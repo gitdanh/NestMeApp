@@ -7,12 +7,27 @@ import {
   TouchableOpacity,
   Text,
   TextInput,
+  LogBox,
 } from "react-native";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Feed from "../components/Feed";
 
 function PostDetail({ navigation, route }) {
-  const { post, username } = route.params;
+  const { post, setPosts, setUserData } = route.params;
+
+  const callbackFunc = () => {
+    setUserData((prev) => ({
+      ...prev,
+      posts_count: prev.posts_count - 1,
+    }));
+    navigation.goBack();
+  };
+
+  useEffect(() => {
+    LogBox.ignoreLogs([
+      "Non-serializable values were found in the navigation state",
+    ]);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -39,7 +54,7 @@ function PostDetail({ navigation, route }) {
           </View>
         </View>
       </View>
-      <Feed post={post} />
+      <Feed post={post} setPosts={setPosts} callbackFunc={callbackFunc} />
     </View>
   );
 }

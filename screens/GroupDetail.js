@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   FlatList,
+  Alert,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
@@ -34,20 +35,34 @@ import {
   rejectRequestToGroup,
   inviteUserToGroup,
 } from "../services/groupService";
+import { getAvatarSource } from "../utils/getImageSource";
 
 const ModalItem = forwardRef(
-  ({ item, setGroupDetail, setUserData, listType, groupOwner }, ref) => {
+  (
+    {
+      item,
+      groupId,
+      setGroupDetail,
+      setUserData,
+      listType,
+      isGroupAdmin,
+      groupOwner,
+    },
+    ref
+  ) => {
     const { privateRequest } = usePrivateHttpClient();
+    const socket = useSelector((state) => state.chat.socket);
+    const authUserId = useSelector((state) => state.authenticate.userId);
 
     const [status, setStatus] = useState("");
     const [loading, setLoading] = useState(false);
 
     const handleAccept = async () => {
       try {
-        setDecisionLoading(true);
+        setLoading(true);
         const response = await acceptRequestToGroup(
-          id,
-          user._id,
+          groupId,
+          item._id,
           privateRequest
         );
 
@@ -59,19 +74,19 @@ const ModalItem = forwardRef(
             members_count: prev.members_count + 1,
           }));
 
-          setDecisionLoading(false);
+          setLoading(false);
 
           socket.current.emit("sendNotification", {
             sender_id: groupOwner._id,
-            receiver_id: [user._id],
-            group_id: id,
+            receiver_id: [item._id],
+            group_id: groupId,
             reponse: true,
             type: "acceptMember",
           });
         }
       } catch (err) {
         console.error("accept ", err);
-        setDecisionLoading(false);
+        setLoading(false);
       }
       //  finally {
       //   socket.current.emit("sendNotification", {
@@ -84,87 +99,87 @@ const ModalItem = forwardRef(
     };
     const handleReject = async () => {
       try {
-        setDecisionLoading(true);
+        setLoading(true);
         const response = await rejectRequestToGroup(
-          id,
-          user._id,
-          privateHttpClient.privateRequest
+          groupId,
+          item._id,
+          privateRequest
         );
 
         if (response.message) {
-          setUser((prev) => prev.filter((item) => item._id !== user._id));
+          setUserData((prev) => prev.filter((user) => user._id !== item._id));
 
           setGroupDetail((prev) => ({
             ...prev,
             requests_count: prev.requests_count - 1,
           }));
 
-          setDecisionLoading(false);
+          setLoading(false);
           socket.current.emit("sendNotification", {
             sender_id: groupOwner._id,
-            receiver_id: [user._id],
-            group_id: id,
+            receiver_id: [item._id],
+            group_id: groupId,
             reponse: true,
             type: "rejectMember",
           });
         }
       } catch (err) {
         console.error("reject ", err);
-        setDecisionLoading(false);
+        setLoading(false);
       }
     };
 
     const handleKick = async () => {
       try {
-        setDecisionLoading(true);
+        setLoading(true);
         const response = await rejectRequestToGroup(
-          id,
-          user._id,
-          privateHttpClient.privateRequest
+          groupId,
+          item._id,
+          privateRequest
         );
 
         if (response.message) {
-          setUser((prev) => prev.filter((item) => item._id !== user._id));
+          setUserData((prev) => prev.filter((user) => user._id !== item._id));
 
           setGroupDetail((prev) => ({
             ...prev,
             members_count: prev.members_count - 1,
           }));
 
-          setDecisionLoading(false);
+          setLoading(false);
         }
       } catch (err) {
         console.error("kick ", err);
-        setDecisionLoading(false);
+        setLoading(false);
       }
     };
 
     const handleInvite = async () => {
       try {
-        setDecisionLoading(true);
+        setLoading(true);
         const response = await inviteUserToGroup(
-          id,
-          user._id,
-          privateHttpClient.privateRequest
+          groupId,
+          item._id,
+          privateRequest
         );
-        console.log(response);
+
         if (response.message) {
-          setUser((prev) =>
-            prev.map((item) =>
-              item._id === user._id ? { ...item, status: "INVITED" } : item
+          setUserData((prev) =>
+            prev.map((user) =>
+              user._id === item._id ? { ...user, status: "INVITED" } : user
             )
           );
-          setDecisionLoading(false);
+          setLoading(false);
           socket.current.emit("sendNotification", {
             sender_id: groupOwner._id,
-            receiver_id: [user._id],
-            group_id: id,
+            receiver_id: [item._id],
+            group_id: groupId,
             type: "inviteGroup",
           });
         }
       } catch (err) {
         console.error("invite ", err);
-        setDecisionLoading(false);
+        setLoading(false);
       }
     };
 
@@ -189,91 +204,138 @@ const ModalItem = forwardRef(
               }}
               numberOfLines={1}
             >
-              {listType === 0
-                ? user._id === groupOwner._id
+              {listType === 3
+                ? item._id === groupOwner._id
                   ? "GROUP OWNER"
-                  : user.status
+                  : item.status
                 : item.full_name}
             </Text>
           </View>
-        </View>
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-          {status !== "" ? (
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: "500",
-                color: "#A8A8A8",
-                marginLeft: 20,
-                marginTop: 10,
-              }}
-            >
-              {status}
-            </Text>
-          ) : loading ? (
-            <ActivityIndicator />
-          ) : listType === 2 ? (
-            <>
-              <TouchableOpacity
+
+          <View
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
+            {status !== "" ? (
+              <Text
                 style={{
-                  width: "45%",
-                  backgroundColor: "#0095f6",
-                  padding: 10,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginRight: "10%",
+                  fontSize: 15,
+                  fontWeight: "500",
+                  color: "#A8A8A8",
+                  marginLeft: 20,
+                  marginTop: 10,
                 }}
-                onPress={handleAccept}
               >
-                <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
-                  Accept
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  width: "45%",
-                  backgroundColor: "#ff6666",
-                  padding: 10,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onPress={handleReject}
-              >
-                <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
-                  Reject
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : listType === 1 ? (
-            <>
-              {myProfile || isFriend || myId === item._id ? null : isSent ? (
-                <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
-                  Sent
-                </Text>
-              ) : (
+                {status}
+              </Text>
+            ) : loading ? (
+              <ActivityIndicator />
+            ) : listType === 1 ? (
+              <>
                 <TouchableOpacity
                   style={{
-                    width: "45%",
+                    width: 70,
                     backgroundColor: "#0095f6",
                     padding: 10,
                     borderRadius: 10,
                     justifyContent: "center",
                     alignItems: "center",
-                    marginRight: "10%",
+                    marginRight: 10,
                   }}
-                  onPress={handleAddFriend}
+                  onPress={handleAccept}
+                  disabled={loading}
                 >
                   <Text
                     style={{ color: "white", fontSize: 14, fontWeight: 500 }}
                   >
-                    Add friend
+                    Accept
                   </Text>
                 </TouchableOpacity>
-              )}
-            </>
-          ) : null}
+                <IconAnt
+                  color={"white"}
+                  size={16}
+                  name="close"
+                  onPress={handleReject}
+                  disabled={loading}
+                />
+              </>
+            ) : listType === 2 ? (
+              <>
+                {item.status === "NONE" ? (
+                  <TouchableOpacity
+                    style={{
+                      width: 70,
+                      backgroundColor: "#0095f6",
+                      padding: 10,
+                      borderRadius: 10,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                    onPress={handleInvite}
+                    disabled={loading}
+                  >
+                    <Text
+                      style={{ color: "white", fontSize: 14, fontWeight: 500 }}
+                    >
+                      Invite
+                    </Text>
+                  </TouchableOpacity>
+                ) : item.status === "MEMBER" || item.status === "ADMIN" ? (
+                  <Text
+                    style={{ color: "white", fontSize: 14, fontWeight: 400 }}
+                  >
+                    Has joined
+                  </Text>
+                ) : item.status === "INVITED" ? (
+                  <Text
+                    style={{ color: "white", fontSize: 14, fontWeight: 400 }}
+                  >
+                    Has invited
+                  </Text>
+                ) : (
+                  item.status === "REQUESTED" && (
+                    <Text
+                      style={{ color: "white", fontSize: 14, fontWeight: 400 }}
+                    >
+                      Has requested to join
+                    </Text>
+                  )
+                )}
+              </>
+            ) : (
+              <>
+                {item._id !== groupOwner._id &&
+                  isGroupAdmin &&
+                  authUserId !== item._id && (
+                    <TouchableOpacity
+                      style={{
+                        width: 70,
+                        backgroundColor: "#ff6666",
+                        padding: 10,
+                        borderRadius: 10,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                      onPress={handleKick}
+                    >
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 14,
+                          fontWeight: 500,
+                        }}
+                      >
+                        Kick
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+              </>
+            )}
+          </View>
         </View>
       </View>
     );
@@ -284,6 +346,8 @@ function GroupDetail(props) {
   const socket = useSelector((state) => state.chat.socket);
   const navigation = useNavigation();
   const { privateRequest } = usePrivateHttpClient();
+
+  const authUserId = useSelector((state) => state.authenticate.userId);
 
   const { groupId } = props.route.params;
   const [data, setData] = useState(null);
@@ -347,7 +411,7 @@ function GroupDetail(props) {
           100,
           privateRequest
         );
-        console.log(data);
+
         if (data) {
           setPosts(data.posts);
           setPostsLoading(false);
@@ -357,12 +421,15 @@ function GroupDetail(props) {
         setPostsLoading(false);
       }
     }
-  }, [groupId, selected]);
+  }, [groupId, postsPage, selected]);
 
   useEffect(() => {
     getDetail();
-    getPosts();
   }, [groupId]);
+
+  useEffect(() => {
+    getPosts();
+  }, [groupId, postsPage, selected]);
 
   const [listType, setListType] = useState(0);
   const [memberRequests, setMemberRequests] = useState([]);
@@ -411,6 +478,72 @@ function GroupDetail(props) {
     }
   }, [groupId]);
 
+  const getFriendsList = useCallback(
+    async () => {
+      try {
+        setModalLoading(true);
+        const data = await getUserFriendsList(groupId, 1, 100, privateRequest);
+        if (data) {
+          setMemberRequests(data.friends);
+          // const recordsCount = data.friend_requests.length;
+
+          // setHasMoreFriendRequests(recordsCount > 0 && recordsCount === 20);
+          // if (recordsCount > 0 && friends.length === 0)
+          //   setFriendRequests(data.friend_requests);
+          // if (recordsCount > 0 && friends.length > 0)
+          //   setFriendRequests((prev) => [...prev, ...data.friend_requests]);
+          setModalLoading(false);
+        }
+      } catch (err) {
+        setModalLoading(false);
+        console.error("list ", err);
+      }
+    },
+    [
+      // friendRequestsPage
+    ]
+  );
+
+  const handleLeave = async () => {
+    try {
+      const response = await rejectRequestToGroup(
+        groupId,
+        authUserId,
+        privateRequest
+      );
+
+      if (response.message) {
+        navigation.navigate("Group");
+
+        //setLoading(false);
+      }
+    } catch (err) {
+      console.error("kick ", err);
+      //setLoading(false);
+    }
+  };
+
+  const openActions = () => {
+    const actions = [
+      data.is_group_admin
+        ? {
+            text: "Edit group information",
+            onPress: () => {},
+          }
+        : {
+            text: "Leave group",
+            onPress: handleLeave,
+            style: "destructive",
+          },
+      {
+        text: "Cancle",
+        style: "cancel",
+      },
+    ];
+
+    Alert.alert("Actions", "Which actions do you want?", actions);
+  };
+
   return detailLoading ? (
     <ActivityIndicator size={70} />
   ) : (
@@ -436,7 +569,7 @@ function GroupDetail(props) {
           <IconAnt
             style={{ marginRight: 5 }}
             onPress={() => {
-              navigation.navigate("Group");
+              navigation.goBack();
             }}
             color={"white"}
             size={27}
@@ -470,7 +603,7 @@ function GroupDetail(props) {
             style={{ alignItems: "center" }}
             onPress={() => {
               getMembersList();
-              setListType(1);
+              setListType(3);
               setModal(true);
             }}
           >
@@ -490,7 +623,7 @@ function GroupDetail(props) {
               style={{ alignItems: "center" }}
               onPress={() => {
                 getJoinRequetsList();
-                setListType(0);
+                setListType(1);
                 setModal(true);
               }}
             >
@@ -528,6 +661,12 @@ function GroupDetail(props) {
             alignItems: "center",
             marginRight: "5%",
           }}
+          onPress={() =>
+            navigation.navigate("CreateGroupPost", {
+              groupPost: true,
+              groupId: groupId,
+            })
+          }
         >
           <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
             Create Post
@@ -543,6 +682,11 @@ function GroupDetail(props) {
             alignItems: "center",
             marginRight: "5%",
           }}
+          onPress={() => {
+            getFriendsList();
+            setListType(2);
+            setModal(true);
+          }}
         >
           <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
             Invite
@@ -555,7 +699,12 @@ function GroupDetail(props) {
             flexDirection: "row",
           }}
         >
-          <Ionicons color={"white"} size={22} name="ellipsis-horizontal" />
+          <Ionicons
+            color={"white"}
+            size={22}
+            name="ellipsis-horizontal"
+            onPress={openActions}
+          />
         </TouchableOpacity>
       </View>
       <View
@@ -575,7 +724,11 @@ function GroupDetail(props) {
           }}
         >
           <TouchableOpacity
-            onPress={() => setSelected(1)}
+            onPress={() => {
+              setPosts([]);
+              setPostsPage(1);
+              setSelected(1);
+            }}
             style={{
               justifyContent: "center",
               alignItems: "center",
@@ -609,7 +762,11 @@ function GroupDetail(props) {
             }}
           >
             <TouchableOpacity
-              onPress={() => setSelected(0)}
+              onPress={() => {
+                setPosts([]);
+                setPostsPage(1);
+                setSelected(0);
+              }}
               style={{
                 justifyContent: "center",
                 alignItems: "center",
@@ -640,10 +797,18 @@ function GroupDetail(props) {
           style={styles.feedContainer}
           data={posts}
           renderItem={(itemData) => {
-            return (
+            return selected === 1 ? (
+              <Feed
+                post={itemData.item}
+                setPosts={setPosts}
+                groupView={true}
+                // {...lastPostRef(itemData.index)}
+              />
+            ) : (
               <PendingFeed
                 post={itemData.item}
                 setPosts={setPosts}
+                setParentData={setData}
                 // {...lastPostRef(itemData.index)}
               />
             );
@@ -714,51 +879,58 @@ function GroupDetail(props) {
                   marginRight: 30,
                 }}
               >
-                {listType === 1 ? "Members" : "Member requests"}
+                {listType === 1
+                  ? "Member requests"
+                  : listType === 2
+                  ? "Your friends"
+                  : "Members"}
               </Text>
             </View>
           </View>
-          {listType === 1 && members.length > 0 ? (
+          {listType === 3 && members.length > 0 ? (
             <View style={{ paddingHorizontal: 20, marginTop: 15 }}>
               <View>
-                {/* <FlatList
+                <FlatList
                   showsVerticalScrollIndicator={false}
                   keyExtractor={(item, index) => index.toString()}
-                  data={friends}
+                  data={members}
                   renderItem={({ item, index }) => {
                     return (
                       <ModalItem
-                        myId={myUserId}
-                        listType={1}
-                        myProfile={isOwnProfile}
-                        isFriend={item?.is_your_friend ? true : false}
-                        isSent={item?.is_friend_request_sent ? true : false}
+                        groupId={groupId}
                         item={item}
-                        setRequestSent={setRequestSent}
+                        setUserData={setMembers}
+                        setGroupDetail={setData}
+                        isGroupAdmin={data?.is_group_admin}
+                        groupOwner={data?.created_by}
+                        listType={listType}
                       />
                     );
                   }}
-                /> */}
+                />
               </View>
             </View>
-          ) : listType === 2 && memberRequests.length > 0 ? (
+          ) : memberRequests.length > 0 ? (
             <View style={{ paddingHorizontal: 20, marginTop: 15 }}>
               <View>
-                {/* <FlatList
+                <FlatList
                   showsVerticalScrollIndicator={false}
                   keyExtractor={(item, index) => index.toString()}
-                  data={friendRequests}
+                  data={memberRequests}
                   renderItem={({ item, index }) => {
                     return (
                       <ModalItem
-                        listType={2}
+                        groupId={groupId}
                         item={item}
-                        setRequestDecision={setRequestDecision}
-                        setUserData={setUserData}
+                        setUserData={setMemberRequests}
+                        setGroupDetail={setData}
+                        isGroupAdmin={data?.is_group_admin}
+                        groupOwner={data?.created_by}
+                        listType={listType}
                       />
                     );
                   }}
-                /> */}
+                />
               </View>
             </View>
           ) : modalLoading ? null : (
@@ -780,7 +952,12 @@ function GroupDetail(props) {
                   marginTop: 10,
                 }}
               >
-                No {listType === 1 ? "members" : "member requests"}
+                No{" "}
+                {listType === 1
+                  ? "requests"
+                  : listType === 2
+                  ? "friends"
+                  : "members"}
               </Text>
             </View>
           )}

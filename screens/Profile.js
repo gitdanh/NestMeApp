@@ -66,6 +66,7 @@ function Profile(props) {
             username={userData?.username}
             avatar={userData?.profile_picture}
             isOwnProfile={isOwnProfile}
+            setUserData={setUserData}
           />
         </View>
       )}

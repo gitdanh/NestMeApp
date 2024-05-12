@@ -40,6 +40,9 @@ export default function VideoScreen(props) {
   const [pickedImages, setPickedImages] = useState([]);
   const cameraRef = useRef();
   const isFocused = useIsFocused();
+  const [groupId, setGroupId] = useState(
+    props.route.params.groupPost ? props.route.params.groupId : null
+  );
 
   useEffect(() => {
     (async () => {
@@ -87,6 +90,7 @@ export default function VideoScreen(props) {
       const source = data.uri;
       if (source) {
         props.navigation.navigate("Save", {
+          groupId: groupId,
           source: [source],
           imageSource: null,
           type,
@@ -108,7 +112,12 @@ export default function VideoScreen(props) {
           const data = await videoRecordPromise;
           const source = data.uri;
           let imageSource = await generateThumbnail(source);
-          props.navigation.navigate("Save", { source, imageSource, type });
+          props.navigation.navigate("Save", {
+            groupId: groupId,
+            source,
+            imageSource,
+            type,
+          });
         }
       } catch (error) {
         console.warn(error);
@@ -163,6 +172,7 @@ export default function VideoScreen(props) {
     }
 
     props.navigation.navigate("Save", {
+      groupId: groupId,
       source: loadedAssets,
       type,
       imageSource,
@@ -270,7 +280,12 @@ export default function VideoScreen(props) {
               color={"white"}
               size={27}
               name="close"
-              onPress={() => props.navigation.navigate("Home")}
+              onPress={() => {
+                if (props.route.params?.groupId) {
+                  props.navigation.setParams({ groupId: undefined });
+                }
+                props.navigation.goBack();
+              }}
             />
             <Text
               style={{
@@ -280,8 +295,7 @@ export default function VideoScreen(props) {
                 marginLeft: 15,
               }}
             >
-              {" "}
-              New Post
+              New {groupId && "Group"} Post
             </Text>
           </View>
           <Text

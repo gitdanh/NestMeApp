@@ -76,6 +76,7 @@ function MainScreen() {
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="GroupDetail" component={GroupDetail} />
       <Stack.Screen name="PostDetail" component={PostDetail} />
+      <Stack.Screen name="CreateGroupPost" component={CreateScreen} />
     </Stack.Navigator>
   );
 }
@@ -177,6 +178,7 @@ function AuthenticatedScreen() {
         name="Create"
         component={CreateScreen}
         options={{ tabBarStyle: { display: "none" } }}
+        initialParams={{ groupPost: false }}
       />
       <Tab.Screen
         name="Group"

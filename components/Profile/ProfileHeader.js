@@ -18,9 +18,12 @@ import { CommonActions } from "@react-navigation/native";
 import { logoutUser } from "../../store/redux/slices/authSlice";
 import * as conversationService from "../../services/conversationService";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { reportUser } from "../../services/userService";
+import usePrivateHttpClient from "../../axios/private-http-hook";
 
 const ProfileHeader = ({ navigation, userId, username, isOwnProfile }) => {
   const dispatch = useDispatch();
+  const { privateRequest } = usePrivateHttpClient();
 
   const authUserId = useSelector((state) => state.authenticate.userId);
   const avatar = useSelector((state) => state.authenticate.avatar);
@@ -28,6 +31,7 @@ const ProfileHeader = ({ navigation, userId, username, isOwnProfile }) => {
     _id: authUserId,
     avatar: avatar,
   };
+  const [reportLoading, setReportLoading] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -69,7 +73,41 @@ const ProfileHeader = ({ navigation, userId, username, isOwnProfile }) => {
     }
   };
 
-  const handleReport = async () => {};
+  const handleReport = async (reportReason) => {
+    try {
+      setReportLoading(true);
+      const response = await reportUser(userId, reportReason, privateRequest);
+      if (response.message) {
+        setReportLoading(false);
+
+        Alert.alert(
+          "Success",
+          "Report user success with reason: " + reportReason
+        );
+      }
+    } catch (err) {
+      setReportLoading(false);
+      Alert.alert("Error", "Report user fail with reason: " + reportReason);
+      console.error(err);
+    }
+  };
+
+  const reasonList = [
+    "Fake user",
+    "False information",
+    "Bullying or Harassment",
+    "Spam",
+  ];
+
+  const openReportReasons = () => {
+    Alert.alert("Reasons", "Why are you reporting this user?", [
+      ...reasonList.map((reason) => ({
+        text: reason,
+        onPress: () => handleReport(reason),
+      })),
+      { text: "Cancle", style: "cancel" },
+    ]);
+  };
 
   const openActions = () => {
     const actions = [
@@ -80,7 +118,7 @@ const ProfileHeader = ({ navigation, userId, username, isOwnProfile }) => {
           }
         : {
             text: "Report",
-            onPress: handleReport,
+            onPress: openReportReasons,
             style: "destructive",
           },
       {

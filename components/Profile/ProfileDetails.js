@@ -35,13 +35,30 @@ const ModalItem = forwardRef(
       isFriend,
       isSent,
       socket,
+      setModal,
     },
     ref
   ) => {
+    const navigator = useNavigation();
     const { privateRequest } = usePrivateHttpClient();
+    const authUsername = useSelector((state) => state.authenticate.username);
+
+    const [profile, setProfile] = useState(
+      authUsername === item.username ? "Profile" : "OtherProfile"
+    );
 
     const [status, setStatus] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const onPressCreatorHandler = () => {
+      navigator.setOptions({
+        unmountOnBlur: false,
+      });
+      navigator.navigate(profile, {
+        isOwnProfile: profile === "Profile" ? true : false,
+        username: item.username,
+      });
+    };
 
     const handleAddFriend = async () => {
       try {
@@ -124,27 +141,35 @@ const ModalItem = forwardRef(
     return (
       <View style={{ marginBottom: 10 }}>
         <View style={{ flexDirection: "row", paddingVertical: 15 }}>
-          <Image
-            source={getAvatarSource(item.profile_picture)}
-            style={{ borderRadius: 50, width: 40, height: 40 }}
-          />
-          <View style={{ flexDirection: "column", marginLeft: 20 }}>
-            <Text style={{ color: "white", fontSize: 15, fontWeight: 700 }}>
-              {item.username}
-            </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 14,
-                fontWeight: 400,
-                flexWrap: "nowrap",
-                maxWidth: "100%",
-              }}
-              numberOfLines={1}
-            >
-              {item.full_name}
-            </Text>
-          </View>
+          <TouchableOpacity
+            style={{ flexDirection: "row" }}
+            onPress={() => {
+              setModal(false);
+              onPressCreatorHandler();
+            }}
+          >
+            <Image
+              source={getAvatarSource(item.profile_picture)}
+              style={{ borderRadius: 50, width: 40, height: 40 }}
+            />
+            <View style={{ flexDirection: "column", marginLeft: 20 }}>
+              <Text style={{ color: "white", fontSize: 15, fontWeight: 700 }}>
+                {item.username}
+              </Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 14,
+                  fontWeight: 400,
+                  flexWrap: "nowrap",
+                  maxWidth: "100%",
+                }}
+                numberOfLines={1}
+              >
+                {item.full_name}
+              </Text>
+            </View>
+          </TouchableOpacity>
 
           <View
             style={{
@@ -635,6 +660,7 @@ const ProfileDetails = ({
                         item={item}
                         setRequestSent={setRequestSent}
                         socket={socket}
+                        setModal={setModal}
                       />
                     );
                   }}
@@ -657,6 +683,7 @@ const ProfileDetails = ({
                         setRequestDecision={setRequestDecision}
                         setUserData={setUserData}
                         socket={socket}
+                        setModal={setModal}
                       />
                     );
                   }}

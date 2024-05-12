@@ -16,7 +16,7 @@ import IconFeather from "react-native-vector-icons/Feather";
 import usePrivateHttpClient from "../../axios/private-http-hook";
 import { useNavigation } from "@react-navigation/native";
 
-const ProfilePost = forwardRef(({ item }, ref) => {
+const ProfilePost = forwardRef(({ item, setPosts, setUserData }, ref) => {
   const navigator = useNavigation();
 
   return (
@@ -25,6 +25,8 @@ const ProfilePost = forwardRef(({ item }, ref) => {
       onPress={() => {
         navigator.navigate("PostDetail", {
           post: item,
+          setPosts: setPosts,
+          setUserData: setUserData,
         });
       }}
     >
@@ -47,7 +49,7 @@ const ProfilePost = forwardRef(({ item }, ref) => {
   );
 });
 
-const ProfilePosts = ({ username, avatar, isOwnProfile }) => {
+const ProfilePosts = ({ username, avatar, isOwnProfile, setUserData }) => {
   const { privateRequest } = usePrivateHttpClient();
   const [selected, setSelected] = useState(0);
   const [data, setData] = useState([]);
@@ -135,7 +137,11 @@ const ProfilePosts = ({ username, avatar, isOwnProfile }) => {
                 }}
                 style={{ justifyContent: "center", alignItems: "center" }}
               >
-                <IconMaterial color={"gray"} size={25} name="grid-on" />
+                <IconMaterial
+                  color={selected === 0 ? "white" : "gray"}
+                  size={25}
+                  name="grid-on"
+                />
               </TouchableOpacity>
             </View>
             {isOwnProfile && (
@@ -156,7 +162,11 @@ const ProfilePosts = ({ username, avatar, isOwnProfile }) => {
                   }}
                   style={{ justifyContent: "center", alignItems: "center" }}
                 >
-                  <IconFeather color={"gray"} size={25} name="bookmark" />
+                  <IconFeather
+                    color={selected === 1 ? "white" : "gray"}
+                    size={25}
+                    name="bookmark"
+                  />
                 </TouchableOpacity>
               </View>
             )}
@@ -166,7 +176,14 @@ const ProfilePosts = ({ username, avatar, isOwnProfile }) => {
         <FlatList
           data={data}
           renderItem={({ item, index }) => {
-            return <ProfilePost item={item} {...lastPostRef(index)} />;
+            return (
+              <ProfilePost
+                item={item}
+                setPosts={setData}
+                setUserData={setUserData}
+                {...lastPostRef(index)}
+              />
+            );
           }}
           keyExtractor={(item) => item._id.toString()}
           numColumns={3}

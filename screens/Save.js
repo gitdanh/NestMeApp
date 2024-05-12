@@ -26,6 +26,7 @@ import {
 import usePrivateHttpClient from "../axios/private-http-hook";
 import { createPost } from "../services/postServices";
 import { useSelector, useDispatch } from "react-redux";
+import { createGroupPost } from "../services/groupService";
 
 const data = [
   { label: "Everyone", value: "PUBLIC", search: "Public" },
@@ -65,6 +66,10 @@ function Save(props) {
 
   const { width } = useWindowDimensions();
 
+  useEffect(() => {
+    console.log("groupId: ", props.route.params?.groupId);
+  }, []);
+
   const handleCreatePost = async () => {
     setUploading(true);
     let images = props.route.params.source;
@@ -87,7 +92,6 @@ function Save(props) {
           () => {
             getDownloadURL(uploadTask.snapshot.ref)
               .then((url) => {
-                console.log(url);
                 resolve(url);
               })
               .catch((error) => {
@@ -103,12 +107,13 @@ function Save(props) {
       const urls = await Promise.allSettled(promises);
       const urlStrings = urls.map((url) => url.value.toString());
 
-      const postData = { title: caption, urlStrings, visibility: value };
+      const postData = props.route.params?.groupId
+        ? { groupId: props.route.params?.groupId, title: caption, urlStrings }
+        : { title: caption, urlStrings, visibility: value };
 
-      const response = await createPost(
-        postData,
-        privateHttpClient.privateRequest
-      );
+      const response = props.route.params?.groupId
+        ? await createGroupPost(postData, privateHttpClient.privateRequest)
+        : await createPost(postData, privateHttpClient.privateRequest);
 
       if (response !== null) {
         if (response.post.visibility !== "PRIVATE") {
@@ -127,7 +132,11 @@ function Save(props) {
           message: "Create success",
         });
         setSnackBarOpen(true);
-        props.navigation.navigate("Home");
+        props.route.params?.groupId
+          ? props.navigation.navigate("GroupDetail", {
+              groupId: props.route.params?.groupId,
+            })
+          : props.navigation.navigate("Home");
       }
     } catch (err) {
       setUploading(false);
@@ -175,7 +184,7 @@ function Save(props) {
             color={"white"}
             size={27}
             name="arrowleft"
-            onPress={() => props.navigation.navigate("Create")}
+            onPress={() => props.navigation.goBack()}
           />
           <Text
             style={{
@@ -250,49 +259,51 @@ function Save(props) {
               multiline={true}
             />
 
-            <View style={styles.container}>
-              {renderLabel()}
-              <Dropdown
-                style={[styles.dropdown, isFocus && { borderColor: "white" }]}
-                placeholderStyle={styles.placeholderStyle}
-                selectedTextStyle={styles.selectedTextStyle}
-                iconStyle={styles.iconStyle}
-                containerStyle={{
-                  backgroundColor: "black",
-                  borderColor: "black",
-                }}
-                itemContainerStyle={{
-                  borderBottomColor: "grey",
-                  borderBottomWidth: 0.5,
-                }}
-                itemTextStyle={{
-                  color: "white",
-                }}
-                activeColor="grey"
-                data={data}
-                autoScroll
-                maxHeight={300}
-                minHeight={100}
-                labelField="label"
-                valueField="value"
-                placeholder={!isFocus ? "Visibility" : "..."}
-                value={value}
-                onFocus={() => setIsFocus(true)}
-                onBlur={() => setIsFocus(false)}
-                onChange={(item) => {
-                  setValue(item.value);
-                  setIsFocus(false);
-                }}
-                // renderLeftIcon={() => (
-                //   <AntDesign
-                //     style={styles.icon}
-                //     color={isFocus ? "grey" : "white"}
-                //     name="folderopen"
-                //     size={20}
-                //   />
-                // )}
-              />
-            </View>
+            {!props.route.params?.groupId && (
+              <View style={styles.container}>
+                {renderLabel()}
+                <Dropdown
+                  style={[styles.dropdown, isFocus && { borderColor: "white" }]}
+                  placeholderStyle={styles.placeholderStyle}
+                  selectedTextStyle={styles.selectedTextStyle}
+                  iconStyle={styles.iconStyle}
+                  containerStyle={{
+                    backgroundColor: "black",
+                    borderColor: "black",
+                  }}
+                  itemContainerStyle={{
+                    borderBottomColor: "grey",
+                    borderBottomWidth: 0.5,
+                  }}
+                  itemTextStyle={{
+                    color: "white",
+                  }}
+                  activeColor="grey"
+                  data={data}
+                  autoScroll
+                  maxHeight={300}
+                  minHeight={100}
+                  labelField="label"
+                  valueField="value"
+                  placeholder={!isFocus ? "Visibility" : "..."}
+                  value={value}
+                  onFocus={() => setIsFocus(true)}
+                  onBlur={() => setIsFocus(false)}
+                  onChange={(item) => {
+                    setValue(item.value);
+                    setIsFocus(false);
+                  }}
+                  // renderLeftIcon={() => (
+                  //   <AntDesign
+                  //     style={styles.icon}
+                  //     color={isFocus ? "grey" : "white"}
+                  //     name="folderopen"
+                  //     size={20}
+                  //   />
+                  // )}
+                />
+              </View>
+            )}
 
             <View
               style={{

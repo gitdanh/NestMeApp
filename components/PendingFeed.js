@@ -13,9 +13,13 @@ import {
 import { getAvatarSource } from "../utils/getImageSource";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
+import { globalBlue } from "../utils/globalColors";
+import { approveGroupPost, rejectGroupPost } from "../services/groupService";
+import usePrivateHttpClient from "../axios/private-http-hook";
 
-const PendingFeed = forwardRef(({ post, setPosts }, ref) => {
+const PendingFeed = forwardRef(({ post, setPosts, setParentData }, ref) => {
   const navigator = useNavigation();
+  const { privateRequest } = usePrivateHttpClient();
   const { width } = useWindowDimensions();
   const authUsername = useSelector((state) => state.authenticate.username);
   const authUserId = useSelector((state) => state.authenticate.userId);
@@ -23,6 +27,9 @@ const PendingFeed = forwardRef(({ post, setPosts }, ref) => {
   const [profile, setProfile] = useState(
     authUsername === post.creator.username ? "Profile" : "OtherProfile"
   );
+
+  const [decisionLoading, setDecisionLoading] = useState(false);
+
   const onPressCreatorHandler = () => {
     navigator.setOptions({
       unmountOnBlur: false,
@@ -32,6 +39,59 @@ const PendingFeed = forwardRef(({ post, setPosts }, ref) => {
       username: post.creator.username,
     });
   };
+
+  const [currentImageView, setCurrentImageView] = useState(0);
+
+  const onViewableItemsChanged = useRef((item) => {
+    const index = item.viewableItems[0].index;
+    setCurrentImageView(index);
+  });
+
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
+
+  const handleApprove = async () => {
+    try {
+      setDecisionLoading(true);
+      const response = await approveGroupPost(post._id, privateRequest);
+
+      if (response.message) {
+        setPosts((prev) => prev.filter((item) => item._id !== post._id));
+        setParentData((prev) => ({
+          ...prev,
+          group_posts_count: prev.group_posts_count + 1,
+        }));
+
+        setDecisionLoading(false);
+      }
+    } catch (err) {
+      console.error("accept ", err);
+      setDecisionLoading(false);
+    }
+    //  finally {
+    //   socket.current.emit("sendNotification", {
+    //     sender_id: user?._id,
+    //     receiver_id: [props.item._id],
+    //     reponse: true,
+    //     type: "accept",
+    //   });
+    // }
+  };
+  const handleReject = async () => {
+    try {
+      setDecisionLoading(true);
+      const response = await rejectGroupPost(post._id, privateRequest);
+
+      if (response.message) {
+        setPosts((prev) => prev.filter((item) => item._id !== post._id));
+
+        setDecisionLoading(false);
+      }
+    } catch (err) {
+      console.error("reject post", err);
+      setDecisionLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
@@ -65,6 +125,8 @@ const PendingFeed = forwardRef(({ post, setPosts }, ref) => {
               </Pressable>
             </View>
           )}
+          onViewableItemsChanged={onViewableItemsChanged.current}
+          viewabilityConfig={viewabilityConfig.current}
         />
       ) : (
         <View style={{ marginHorizontal: 10 }}>
@@ -97,6 +159,8 @@ const PendingFeed = forwardRef(({ post, setPosts }, ref) => {
                     width: 8,
                     height: 8,
                     borderRadius: 4,
+                    backgroundColor:
+                      currentImageView === i ? globalBlue : "gray",
                     marginHorizontal: 3,
                   }}
                 />
@@ -145,7 +209,8 @@ const PendingFeed = forwardRef(({ post, setPosts }, ref) => {
             alignItems: "center",
             marginRight: "10%",
           }}
-          // onPress={handleAcceptToGroup}
+          onPress={handleApprove}
+          disabled={decisionLoading}
         >
           <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
             Accept
@@ -160,7 +225,8 @@ const PendingFeed = forwardRef(({ post, setPosts }, ref) => {
             justifyContent: "center",
             alignItems: "center",
           }}
-          // onPress={handleDeleteToGroup}
+          onPress={handleReject}
+          disabled={decisionLoading}
         >
           <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
             Reject
@@ -179,7 +245,7 @@ export const styles = StyleSheet.create({
   profileThumb: {
     width: 35,
     height: 35,
-    borderRadius: 10,
+    borderRadius: 50,
   },
   headerWrapper: {
     display: "flex",

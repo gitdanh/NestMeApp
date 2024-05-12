@@ -33,8 +33,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { calculatedTime } from "../utils/calculatedTime";
 import { Audio } from "expo-av";
 import { Camera } from "expo-camera/legacy";
-import * as MediaLibrary from 'expo-media-library';
-import { useIsFocused } from '@react-navigation/native';
+import * as MediaLibrary from "expo-media-library";
+import { useIsFocused } from "@react-navigation/native";
 import { container, utils } from "../styles/authStyle";
 import { updateMessageRemoves } from "../store/redux/slices/chatSlice";
 import {
@@ -65,32 +65,35 @@ const SingleChat = (props) => {
   const [hasMoreMsg, setHasMoreMsg] = useState(true);
   const [isEndReached, setIsEndReached] = useState(false);
 
+  // Get messages ........................................
 
-    // Get messages ........................................
+  const handleEndReached = () => {
+    if (hasMoreMsg) {
+      setPage((prev) => prev + 1);
+      setIsEndReached(true);
+    }
+  };
 
-    const handleEndReached = () => {
-        if (hasMoreMsg) {
-          setPage((prev) => prev + 1);
-          setIsEndReached(true);
-        }
-      };
-    
-    const getMessages = useCallback(async () => {
-        try {
-            setLoadMore(true);
-            const response = await messageService.getMessages(data._id, msg?.length, user._id);
-            const msgCount = response.length;
-            setHasMoreMsg(msgCount > 0 && msgCount === 20);
-            if (response) {
-                setMsg((prev) => [...prev, ...response.reverse()]);
-            }
-        } catch (err) {
-            console.error("messages ", err);
-            setLoadMore(false);
-        } finally {
-          setLoadMore(false);
-        }
-    }, [page]);
+  const getMessages = useCallback(async () => {
+    try {
+      setLoadMore(true);
+      const response = await messageService.getMessages(
+        data._id,
+        msg?.length,
+        user._id
+      );
+      const msgCount = response.length;
+      setHasMoreMsg(msgCount > 0 && msgCount === 20);
+      if (response) {
+        setMsg((prev) => [...prev, ...response.reverse()]);
+      }
+    } catch (err) {
+      console.error("messages ", err);
+      setLoadMore(false);
+    } finally {
+      setLoadMore(false);
+    }
+  }, [page]);
 
   const lastMessageRef = useCallback(
     (index) => {
@@ -107,7 +110,6 @@ const SingleChat = (props) => {
 
   useEffect(() => {
     getMessages();
-    console.log(props.route.params.data);
   }, [page]);
 
   const user = {
@@ -115,27 +117,31 @@ const SingleChat = (props) => {
     avatar: avatar,
   };
 
-    const [msg, setMsg] = useState([]);
-    const [disabled, setdisabled] = useState(false);
-    const [fetching, setFetching] = useState(false);
-    useEffect(() => {
-        setFetching(true);
-        const fetchData = async () => {
-          try {
-            if(data._id && user._id){
-              const result = await messageService.getMessages(data._id, 0, user._id);
-              setMsg(result.reverse());
-            }
-          } catch (error) {
-            console.log(error);
-            setFetching(false);
-          } finally {
-            setFetching(false);
-          }
-        };
-    
-        fetchData();
-    }, [data._id]);
+  const [msg, setMsg] = useState([]);
+  const [disabled, setdisabled] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  useEffect(() => {
+    setFetching(true);
+    const fetchData = async () => {
+      try {
+        if (data._id && user._id) {
+          const result = await messageService.getMessages(
+            data._id,
+            0,
+            user._id
+          );
+          setMsg(result.reverse());
+        }
+      } catch (error) {
+        console.log(error);
+        setFetching(false);
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchData();
+  }, [data._id]);
 
   // sockets ........................................
 
@@ -150,55 +156,54 @@ const SingleChat = (props) => {
   }, [socket?.current, data]);
 
   useEffect(() => {
-      if(data){
-          socket.current.on("getOfflineUser", (off) => {
-              if(data.userIds.includes(off.user_id)){
-                  setIsOnline(false);
-                  setLastOnl(new Date().toISOString());
-              }
-          });
-      }
+    if (data) {
+      socket.current.on("getOfflineUser", (off) => {
+        if (data.userIds.includes(off.user_id)) {
+          setIsOnline(false);
+          setLastOnl(new Date().toISOString());
+        }
+      });
+    }
   }, [socket?.current, data]);
 
-
   useEffect(() => {
-      if(socket){
-          if (socket.current && !socketEventRef.current && !isEventRegistered) {
-              socket.current.on("msg-recieve", (msg) => handleMsgRecieve(data, msg));
-              socketEventRef.current = true;
-              setIsEventRegistered(true);
-          }
+    if (socket) {
+      if (socket.current && !socketEventRef.current && !isEventRegistered) {
+        socket.current.on("msg-recieve", (msg) => handleMsgRecieve(data, msg));
+        socketEventRef.current = true;
+        setIsEventRegistered(true);
       }
+    }
   }, [data._id, socket.current, isEventRegistered]);
-    
+
   const handleMsgRecieve = (c, msgRecieve) => {
     if (c) {
-        if (msgRecieve.conversationId === c._id) {
-          const isDuplicate = msg.some(
-            (message) => message._id === msgRecieve._id
-          );
-          if (!isDuplicate) {
-            setMsg((prevMsg) => [msgRecieve, ...prevMsg]);
-          }
-          const reader = {
-              conversation_id: c._id, // Sửa thành 'c._id' thay vì 'data._id'
-              reader_id: user._id,
-          };
-          (async () => {
-              try {
-                  await messageService.addReader(reader);
-              } catch (err) {
-                  console.log(err);
-              }
-          })();
+      if (msgRecieve.conversationId === c._id) {
+        const isDuplicate = msg.some(
+          (message) => message._id === msgRecieve._id
+        );
+        if (!isDuplicate) {
+          setMsg((prevMsg) => [msgRecieve, ...prevMsg]);
         }
+        const reader = {
+          conversation_id: c._id, // Sửa thành 'c._id' thay vì 'data._id'
+          reader_id: user._id,
+        };
+        (async () => {
+          try {
+            await messageService.addReader(reader);
+          } catch (err) {
+            console.log(err);
+          }
+        })();
+      }
     }
   };
 
   useEffect(() => {
     // console.log(socket, currentChat._id);
     // console.log(checkCurrentChatIdRef.current);
-    if(socket){
+    if (socket) {
       // console.log("toi socket", socket.current, socketEventRef.current);
       if (socket.current && socketEventRef.current) {
         socket.current.on("msg-deleted", (data) => handleMsgDeleted(data));
@@ -212,51 +217,53 @@ const SingleChat = (props) => {
   };
 
   useEffect(() => {
-    if(socket){
+    if (socket) {
       // console.log("toi socket");
       if (socket.current) {
-        socket.current.on("delete-recieve", (con) => handleRecieveDeleteChat(con));
+        socket.current.on("delete-recieve", (con) =>
+          handleRecieveDeleteChat(con)
+        );
       }
     }
   }, [socket?.current]);
 
   const handleRecieveDeleteChat = async (con) => {
-    console.log(con);
+    //console.log(con);
     setData(con);
   };
 
   // readers ........................................
 
   useEffect(() => {
-      const addReader = async () => {
-          const reader = {
-              conversation_id: data._id,
-              reader_id: user._id,
-          }
-          if (data.unread) {
-              try {
-                  await messageService.addReader(reader);
-              } catch (err) {
-                  console.log(err);
-              }
-          }
+    const addReader = async () => {
+      const reader = {
+        conversation_id: data._id,
+        reader_id: user._id,
       };
-  
-      addReader();
+      if (data.unread) {
+        try {
+          await messageService.addReader(reader);
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    };
+
+    addReader();
   }, [data._id]);
 
   // Send messages ........................................
   const [text, setText] = useState("");
-  const [img, setImg] = useState([])
+  const [img, setImg] = useState([]);
   const [sending, setSending] = useState(false);
 
   const handleSendMessage = async () => {
-    if((text.trim() !== "" || img.length != 0) && sending == false){
+    if ((text.trim() !== "" || img.length != 0) && sending == false) {
       const promises = img.map(async (image) => {
         const name = Date.now() + Math.random();
-        const storageRef  = ref(storage,`images/${name}`);
+        const storageRef = ref(storage, `images/${name}`);
         let imageSend = image;
-        if(!isCaptured){
+        if (!isCaptured) {
           const loadedAsset = await MediaLibrary.getAssetInfoAsync(image);
           imageSend = loadedAsset.localUri;
         }
@@ -266,9 +273,11 @@ const SingleChat = (props) => {
         // promises.push(uploadTask);
         // console.log(promises);
         return new Promise((resolve, reject) => {
-          uploadTask.on('state_changed', 
-          (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+              const progress =
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             },
             (error) => {
               console.log(error);
@@ -277,25 +286,25 @@ const SingleChat = (props) => {
             () => {
               // console.log("Toi r");
               getDownloadURL(uploadTask.snapshot.ref)
-              .then((url) => {
-                // console.log(url);
-                resolve(url);
-              })
-              .catch((error) => {
-                console.log(error);
-                reject(error);
-              });
+                .then((url) => {
+                  // console.log(url);
+                  resolve(url);
+                })
+                .catch((error) => {
+                  console.log(error);
+                  reject(error);
+                });
             }
           );
         });
       });
-      try{
+      try {
         setSending(true);
         const urls = await Promise.allSettled(promises);
-        console.log(urls);
+        //console.log(urls);
         const urlStrings = urls.map((url) => url.value.toString());
-        try{
-            const newMessage = {
+        try {
+          const newMessage = {
             conversationId: data._id,
             recieve_ids: data.userIds,
             sender_id: user._id,
@@ -304,40 +313,54 @@ const SingleChat = (props) => {
             media: urlStrings,
             removed: false,
           };
-          
+
           const result = await messageService.sendMessage(newMessage);
-          const savedMessage = {_id: result._id, ...newMessage};
-          if(data?.is_deleted && data?.is_deleted.find(obj => obj.user_id === data.userIds[0] && obj.deleted === true)){
+          const savedMessage = { _id: result._id, ...newMessage };
+          if (
+            data?.is_deleted &&
+            data?.is_deleted.find(
+              (obj) => obj.user_id === data.userIds[0] && obj.deleted === true
+            )
+          ) {
             const data = {
               conversationId: data._id,
               userId: data.userIds[0],
-            }
+            };
             let last_msg;
-            if(result?.media.length > 0){
+            if (result?.media.length > 0) {
               last_msg = "Image";
-            } else{
+            } else {
               last_msg = result?.content;
             }
-            console.log(text, last_msg);
-            const isDeleted = data.is_deleted.map(deletedItem => {
+            //console.log(text, last_msg);
+            const isDeleted = data.is_deleted.map((deletedItem) => {
               if (deletedItem.user_id === data.userIds[0]) {
                 return { ...deletedItem, deleted: false };
               }
               return deletedItem;
             });
 
-            setData(prevData => ({ ...prevData, is_deleted: isDeleted }));
-            const con = {_id: data._id, userIds: [user._id], name: user.full_name, img: user.profile_picture, 
-              msg_id: result._id, lastMsg: last_msg, unread: true, online: true, last_online: data.last_online,
-              is_deleted: isDeleted,recieve_ids: data.userIds,
+            setData((prevData) => ({ ...prevData, is_deleted: isDeleted }));
+            const con = {
+              _id: data._id,
+              userIds: [user._id],
+              name: user.full_name,
+              img: user.profile_picture,
+              msg_id: result._id,
+              lastMsg: last_msg,
+              unread: true,
+              online: true,
+              last_online: data.last_online,
+              is_deleted: isDeleted,
+              recieve_ids: data.userIds,
             };
             // console.log(con);
             conversationService.returnConversation(data);
             socket.current.emit("return-chat", con);
-          } else{
-            socket.current.emit("send-msg", savedMessage)
+          } else {
+            socket.current.emit("send-msg", savedMessage);
           }
-          setMsg((prevMsg) => [savedMessage, ...prevMsg]);  
+          setMsg((prevMsg) => [savedMessage, ...prevMsg]);
         } catch (err) {
           console.log(err);
         }
@@ -345,8 +368,8 @@ const SingleChat = (props) => {
         console.log(err);
       } finally {
         setSending(false);
-        setIsModalVisible(false); 
-        setText("") ;
+        setIsModalVisible(false);
+        setText("");
         setImg([]);
         setIsCaptured(false);
       }
@@ -356,34 +379,43 @@ const SingleChat = (props) => {
 
   //Xoa ............................................
   const [more, setMore] = useState(false);
-  const handleDelete = async () =>{
-    console.log("xoa ne" + data._id )
-    try{
-        const info = {
-            userId: user._id,
-            conversationId: data._id
+  const handleDelete = async () => {
+    console.log("xoa ne" + data._id);
+    try {
+      const info = {
+        userId: user._id,
+        conversationId: data._id,
+      };
+      await conversationService.deleteConversation(info);
+      const isDeleted = item.is_deleted.map((deletedItem) => {
+        if (deletedItem.user_id === user._id) {
+          return { ...deletedItem, deleted: true };
         }
-        await conversationService.deleteConversation(info)
-        const isDeleted = item.is_deleted.map(deletedItem => {
-          if (deletedItem.user_id === user._id) {
-            return { ...deletedItem, deleted: true };
-          }
-          return deletedItem;
-        });
-        setData(prevData => ({ ...prevData, is_deleted: isDeleted }));
-        const con = {_id: data._id, userIds: [user._id], name: user.full_name, img: user.profile_picture, 
-          msg_id: result._id, lastMsg: last_msg, unread: true, online: true, last_online: data.last_online,
-          is_deleted: updatedData.is_deleted, recieve_ids: data.userIds,
-        };
+        return deletedItem;
+      });
+      setData((prevData) => ({ ...prevData, is_deleted: isDeleted }));
+      const con = {
+        _id: data._id,
+        userIds: [user._id],
+        name: user.full_name,
+        img: user.profile_picture,
+        msg_id: result._id,
+        lastMsg: last_msg,
+        unread: true,
+        online: true,
+        last_online: data.last_online,
+        is_deleted: updatedData.is_deleted,
+        recieve_ids: data.userIds,
+      };
 
-        socket.current.emit("delete-chat", con);
-    } catch (error){
-        console.log(error);
-    } finally{
+      socket.current.emit("delete-chat", con);
+    } catch (error) {
+      console.log(error);
+    } finally {
       setMore(false);
       props.navigation.navigate("Chat", { con: data._id });
-    } 
-  }
+    }
+  };
 
   //Modal
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -393,85 +425,108 @@ const SingleChat = (props) => {
   const [isCaptured, setIsCaptured] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isFlash, setIsFlash] = useState(false);
-  const [showGallery, setShowGallery] = useState(true)
-  const [galleryItems, setGalleryItems] = useState([])
+  const [showGallery, setShowGallery] = useState(true);
+  const [galleryItems, setGalleryItems] = useState([]);
   const cameraRef = useRef();
   const isFocused = useIsFocused();
-  
-  useEffect(() => {
-      (async () => {
-        const cameraPermissions = await Camera.requestCameraPermissionsAsync();
-        const galleryPermissions = await MediaLibrary.requestPermissionsAsync();
 
-        const audioPermissions = await Audio.requestPermissionsAsync();
-        if (cameraPermissions.status === 'granted' && audioPermissions.status === 'granted' && galleryPermissions.status === 'granted') {
-          const getPhotos = await MediaLibrary.getAssetsAsync({ sortBy: ['creationTime'], mediaType: ['photo', 'video'] })
-          setGalleryItems(getPhotos)
-          setHasPermission(true)
-        }
-      })();
+  useEffect(() => {
+    (async () => {
+      const cameraPermissions = await Camera.requestCameraPermissionsAsync();
+      const galleryPermissions = await MediaLibrary.requestPermissionsAsync();
+
+      const audioPermissions = await Audio.requestPermissionsAsync();
+      if (
+        cameraPermissions.status === "granted" &&
+        audioPermissions.status === "granted" &&
+        galleryPermissions.status === "granted"
+      ) {
+        const getPhotos = await MediaLibrary.getAssetsAsync({
+          sortBy: ["creationTime"],
+          mediaType: ["photo", "video"],
+        });
+        setGalleryItems(getPhotos);
+        setHasPermission(true);
+      }
+    })();
   }, []);
 
   const onCameraReady = () => {
-      setIsCameraReady(true);
+    setIsCameraReady(true);
   };
   const takePicture = async () => {
     if (cameraRef.current) {
-        const options = { quality: 0.5, base64: true, skipProcessing: true };
-        const data = await cameraRef.current.takePictureAsync(options);
-        const source = data.uri;
-        if (source) {
-          setIsCaptured(true)
-          setImg((prev => [...prev, source]))
-        }
+      const options = { quality: 0.5, base64: true, skipProcessing: true };
+      const data = await cameraRef.current.takePictureAsync(options);
+      const source = data.uri;
+      if (source) {
+        setIsCaptured(true);
+        setImg((prev) => [...prev, source]);
+      }
     }
   };
-  
+
   const generateThumbnail = async (source) => {
-      try {
-          const { uri } = await VideoThumbnails.getThumbnailAsync(
-              source,
-              {
-                  time: 5000,
-              }
-          );
-          return uri;
-      } catch (e) {
-          console.warn(e);
-      }
+    try {
+      const { uri } = await VideoThumbnails.getThumbnailAsync(source, {
+        time: 5000,
+      });
+      return uri;
+    } catch (e) {
+      console.warn(e);
+    }
   };
 
   const switchCamera = () => {
-      if (isPreview) {
-          return;
-      }
-      setCameraType((prevCameraType) =>
-          prevCameraType === Camera.Constants.Type.back
-              ? Camera.Constants.Type.front
-              : Camera.Constants.Type.back
-      );
+    if (isPreview) {
+      return;
+    }
+    setCameraType((prevCameraType) =>
+      prevCameraType === Camera.Constants.Type.back
+        ? Camera.Constants.Type.front
+        : Camera.Constants.Type.back
+    );
   };
 
   const renderCaptureControl = () => (
-      <View>
-          <View style={{ justifyContent: 'space-evenly', width: '100%', alignItems: 'center', flexDirection: 'row', backgroundColor: 'black' }}>
-              <TouchableOpacity disabled={!isCameraReady} onPress={() => setIsFlash(!isFlash)} >
-                  <IconFeather style={utils.margin15} name={"zap"} size={25} color="white" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                  activeOpacity={0.7}
-                  disabled={!isCameraReady}
-                  onPress={takePicture}
-                  style={styles.capturePicture}
-              />
-              <TouchableOpacity disabled={!isCameraReady} onPress={switchCamera}>
-                  <IconFeather style={utils.margin15} name="rotate-cw" size={25} color="white" />
-              </TouchableOpacity>
-          </View>
+    <View>
+      <View
+        style={{
+          justifyContent: "space-evenly",
+          width: "100%",
+          alignItems: "center",
+          flexDirection: "row",
+          backgroundColor: "black",
+        }}
+      >
+        <TouchableOpacity
+          disabled={!isCameraReady}
+          onPress={() => setIsFlash(!isFlash)}
+        >
+          <IconFeather
+            style={utils.margin15}
+            name={"zap"}
+            size={25}
+            color="white"
+          />
+        </TouchableOpacity>
 
+        <TouchableOpacity
+          activeOpacity={0.7}
+          disabled={!isCameraReady}
+          onPress={takePicture}
+          style={styles.capturePicture}
+        />
+        <TouchableOpacity disabled={!isCameraReady} onPress={switchCamera}>
+          <IconFeather
+            style={utils.margin15}
+            name="rotate-cw"
+            size={25}
+            color="white"
+          />
+        </TouchableOpacity>
       </View>
-
+    </View>
   );
   return (
     <View style={styles.container}>
@@ -533,7 +588,12 @@ const SingleChat = (props) => {
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <IconFeather color={"white"} size={25} name="menu" onPress={() => setMore(true)}/>
+          <IconFeather
+            color={"white"}
+            size={25}
+            name="menu"
+            onPress={() => setMore(true)}
+          />
         </View>
       </View>
       <KeyboardAvoidingView
@@ -542,28 +602,29 @@ const SingleChat = (props) => {
         behavior="padding"
         enabled={Platform.OS === "ios"}
       >
-        {loadMore  && page > 1 && <ActivityIndicator />}
-        {msg &&
-        <FlatList
-          style={{ flex: 1 }}
-          data={msg}
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode={"interactive"}
-          keyExtractor={(item, index) => index.toString()}
-          inverted
-          renderItem={({ item, index }) => {
-            return (
-              <MsgComponent
-                sender={item.sender_id === user._id}
-                currentChat={data}
-                {...lastMessageRef(index)}
-                item={item}
-              />
-            );
-          }}
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.1}
-        />}
+        {loadMore && page > 1 && <ActivityIndicator />}
+        {msg && (
+          <FlatList
+            style={{ flex: 1 }}
+            data={msg}
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode={"interactive"}
+            keyExtractor={(item, index) => index.toString()}
+            inverted
+            renderItem={({ item, index }) => {
+              return (
+                <MsgComponent
+                  sender={item.sender_id === user._id}
+                  currentChat={data}
+                  {...lastMessageRef(index)}
+                  item={item}
+                />
+              );
+            }}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.1}
+          />
+        )}
 
         <View
           style={{
@@ -591,8 +652,10 @@ const SingleChat = (props) => {
           >
             <TouchableOpacity
               disabled={disabled}
-              style={{marginRight: 10}}
-              onPress={() => {setIsModalVisible(true), setShowGallery(false)}}
+              style={{ marginRight: 10 }}
+              onPress={() => {
+                setIsModalVisible(true), setShowGallery(false);
+              }}
             >
               <IconFeather color={"gray"} size={25} name="camera" />
             </TouchableOpacity>
@@ -609,17 +672,16 @@ const SingleChat = (props) => {
             />
 
             <TouchableOpacity
-              style={{marginRight: 10}}
+              style={{ marginRight: 10 }}
               disabled={disabled}
-              onPress={() => {setIsModalVisible(true), setShowGallery(true)}}
+              onPress={() => {
+                setIsModalVisible(true), setShowGallery(true);
+              }}
             >
               <IconEntypo color="#fff" size={20} name="images" />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              disabled={disabled}
-              onPress={handleSendMessage}
-            >
+            <TouchableOpacity disabled={disabled} onPress={handleSendMessage}>
               <Icon color="#fff" size={20} name="paper-plane-sharp" />
             </TouchableOpacity>
           </View>
@@ -630,154 +692,280 @@ const SingleChat = (props) => {
         onRequestClose={() => setIsModalVisible(false)}
         animationType="slide"
         presentationStyle="pageSheet"
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "black",
+            borderTopColor: "#262626",
+            borderTopWidth: 5,
+          }}
         >
-          <View style={{flex: 1, backgroundColor: "black", borderTopColor: "#262626", borderTopWidth: 5}}>
-            <View style={{ paddingLeft: 20, paddingRight: 20, display: "flex", flexDirection:"row", alignItems:"center", justifyContent: "space-between", backgroundColor: "#262626", paddingTop: 10, paddingBottom: 15}}>
-              <View style={{display: "flex", flexDirection:"row", alignItems:"center"}}>
-                  <AntDesign color={"white"} size={27} name="close" onPress={() => {setIsModalVisible(false); setImg([])}}/>
-              </View>
+          <View
+            style={{
+              paddingLeft: 20,
+              paddingRight: 20,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backgroundColor: "#262626",
+              paddingTop: 10,
+              paddingBottom: 15,
+            }}
+          >
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <AntDesign
+                color={"white"}
+                size={27}
+                name="close"
+                onPress={() => {
+                  setIsModalVisible(false);
+                  setImg([]);
+                }}
+              />
             </View>
-            {hasPermission === null ? <View /> : 
-            hasPermission === false ? <Text style={styles.text}>No access to camera</Text> :
-            showGallery ?
-            <SafeAreaView style={{ flex: 1, marginBottom: 49}}>
-                <ScrollView
-                  style={[container.container, {backgroundColor: "black"}]}>
-                    <View style={{ flex: 1, borderTopWidth: 1, borderColor: '#262626'}}>
-                        <FlatList
-                            scrollEnabled={false}
-                            numColumns={3}
-                            horizontal={false}
-                            data={galleryItems.assets}
-
-                            contentContainerStyle={{
-                                flexGrow: 1,
-                            }}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={[container.containerImage, {borderLeftWidth: 2,
-                                      borderRightWidth: 2,
-                                      borderTopWidth: 2,
-                                      borderColor: 'black'}]}
-                                      onPress={() => { 
-                                        if(img.includes(item))
-                                          setImg((prev) => prev.filter(image => image !== item))
-                                        else
-                                          setImg((prev) => [...prev, item]) 
-                                }}>
-                                    <Image
-                                        style={container.image}
-                                        source={{ uri: item.uri }}
-                                    />
-                                    {img.includes(item) &&
-                                      <View
-                                          style={{
-                                          position: 'absolute',
-                                          bottom: 0,
-                                          left: 0,
-                                          top: 0,
-                                          right: 0,
-                                          backgroundColor: 'rgba(4, 3, 3, 0.8)',
-                                          zIndex: 2,
-                                          }}
-                                      >
-                                      <AntDesign
-                                        style={{ position: 'absolute', padding: 10, bottom: 0,
-                                          right: 0, }}
-                                        name="checkcircleo"
-                                        size={20}
-                                        color="blue"
-                                      />
-                                    </View>}
-                                </TouchableOpacity>
-                            )}
-
+          </View>
+          {hasPermission === null ? (
+            <View />
+          ) : hasPermission === false ? (
+            <Text style={styles.text}>No access to camera</Text>
+          ) : showGallery ? (
+            <SafeAreaView style={{ flex: 1, marginBottom: 49 }}>
+              <ScrollView
+                style={[container.container, { backgroundColor: "black" }]}
+              >
+                <View
+                  style={{ flex: 1, borderTopWidth: 1, borderColor: "#262626" }}
+                >
+                  <FlatList
+                    scrollEnabled={false}
+                    numColumns={3}
+                    horizontal={false}
+                    data={galleryItems.assets}
+                    contentContainerStyle={{
+                      flexGrow: 1,
+                    }}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[
+                          container.containerImage,
+                          {
+                            borderLeftWidth: 2,
+                            borderRightWidth: 2,
+                            borderTopWidth: 2,
+                            borderColor: "black",
+                          },
+                        ]}
+                        onPress={() => {
+                          if (img.includes(item))
+                            setImg((prev) =>
+                              prev.filter((image) => image !== item)
+                            );
+                          else setImg((prev) => [...prev, item]);
+                        }}
+                      >
+                        <Image
+                          style={container.image}
+                          source={{ uri: item.uri }}
                         />
-                    </View>
-                </ScrollView>
-                {img?.length > 0 &&
+                        {img.includes(item) && (
+                          <View
+                            style={{
+                              position: "absolute",
+                              bottom: 0,
+                              left: 0,
+                              top: 0,
+                              right: 0,
+                              backgroundColor: "rgba(4, 3, 3, 0.8)",
+                              zIndex: 2,
+                            }}
+                          >
+                            <AntDesign
+                              style={{
+                                position: "absolute",
+                                padding: 10,
+                                bottom: 0,
+                                right: 0,
+                              }}
+                              name="checkcircleo"
+                              size={20}
+                              color="blue"
+                            />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              </ScrollView>
+              {img?.length > 0 && (
                 <View
                   style={{
-                  position: 'absolute',
-                  bottom: 10,
-                  left: "10%",
-                  right: "10%",
-                  zIndex: 3,
+                    position: "absolute",
+                    bottom: 10,
+                    left: "10%",
+                    right: "10%",
+                    zIndex: 3,
                   }}
                 >
-                  {sending ?  <ActivityIndicator size={40} /> :
-                  <TouchableOpacity
-                    style={{backgroundColor: "#0095f6", borderRadius: 10, padding: 10, display: "flex", justifyContent: "center", alignItems:"center"}}
-                    onPress={handleSendMessage}  >
-                      <Text style={{color: "white", fontSize: 15, fontWeight: 600}}>Send {img?.length}</Text>
-                    </TouchableOpacity> }
-                </View>}
-            </SafeAreaView> : 
-            <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'black'}}>
-              <View
-                  style={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}>
-                  { isCaptured ? <Image
+                  {sending ? (
+                    <ActivityIndicator size={40} />
+                  ) : (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: "#0095f6",
+                        borderRadius: 10,
+                        padding: 10,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                      onPress={handleSendMessage}
+                    >
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 15,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Send {img?.length}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+            </SafeAreaView>
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "column",
+                backgroundColor: "black",
+              }}
+            >
+              <View style={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}>
+                {isCaptured ? (
+                  <Image
                     style={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}
                     source={{ uri: img[0] }}
-                /> : (isFocused ?
-                    <Camera
-                        ref={cameraRef}
-                        style={{ flex: 1 }}
-                        type={cameraType}
-                        flashMode={isFlash ? Camera.Constants.FlashMode.torch : Camera.Constants.FlashMode.off}
-                        styles={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}
-                        ratio={'1:1'}
-                        onCameraReady={onCameraReady}
-                    />
-                    : null) }
-                
+                  />
+                ) : isFocused ? (
+                  <Camera
+                    ref={cameraRef}
+                    style={{ flex: 1 }}
+                    type={cameraType}
+                    flashMode={
+                      isFlash
+                        ? Camera.Constants.FlashMode.torch
+                        : Camera.Constants.FlashMode.off
+                    }
+                    styles={[{ aspectRatio: 1 / 1, height: WINDOW_WIDTH }]}
+                    ratio={"1:1"}
+                    onCameraReady={onCameraReady}
+                  />
+                ) : null}
               </View>
 
-              <View style={[{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  flex: 1,
-              }]}>
-                  <View>
-                      {renderCaptureControl()}
-                  </View>
-
+              <View
+                style={[
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    flex: 1,
+                  },
+                ]}
+              >
+                <View>{renderCaptureControl()}</View>
               </View>
-              {isCaptured > 0 &&
+              {isCaptured > 0 && (
                 <View
                   style={{
-                  position: 'absolute',
-                  bottom: 30,
-                  left: "10%",
-                  right: "10%",
-                  zIndex: 3,
+                    position: "absolute",
+                    bottom: 30,
+                    left: "10%",
+                    right: "10%",
+                    zIndex: 3,
                   }}
                 >
-                  {sending ?  <ActivityIndicator size={40} /> :
-                  <TouchableOpacity
-                    style={{backgroundColor: "#0095f6", borderRadius: 10, padding: 10, display: "flex", justifyContent: "center", alignItems:"center"}}
-                    onPress={handleSendMessage}  >
-                      <Text style={{color: "white", fontSize: 15, fontWeight: 600}}>Send</Text>
-                    </TouchableOpacity> }
+                  {sending ? (
+                    <ActivityIndicator size={40} />
+                  ) : (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: "#0095f6",
+                        borderRadius: 10,
+                        padding: 10,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                      onPress={handleSendMessage}
+                    >
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 15,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Send
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-              }
-            </View>}
-          </View>
-        </Modal>
-
-        <Modal
-          visible={more}
-          onRequestClose={() => setMore(false)}
-          animationType="fade"
-          transparent={true}
-        >
-          <View style={styles.centeredView}>
-            <View style={{ backgroundColor: "#262626", borderRadius: 10}}>
-              <Text style={{color: "rgb(237, 73, 86)", width: 200, padding: 15, borderBottomColor: "#4e4d4d", borderBottomWidth: 2, fontSize: 15, fontWeight: 500, textAlign: "center"}} onPress={handleDelete}>Delete</Text>
-              <Text style={{color: "white", width: 200, padding: 15, fontSize: 15, fontWeight: 500, textAlign: "center"}} onPress={() => setMore(false)}>Cancel</Text>
+              )}
             </View>
+          )}
+        </View>
+      </Modal>
+
+      <Modal
+        visible={more}
+        onRequestClose={() => setMore(false)}
+        animationType="fade"
+        transparent={true}
+      >
+        <View style={styles.centeredView}>
+          <View style={{ backgroundColor: "#262626", borderRadius: 10 }}>
+            <Text
+              style={{
+                color: "rgb(237, 73, 86)",
+                width: 200,
+                padding: 15,
+                borderBottomColor: "#4e4d4d",
+                borderBottomWidth: 2,
+                fontSize: 15,
+                fontWeight: 500,
+                textAlign: "center",
+              }}
+              onPress={handleDelete}
+            >
+              Delete
+            </Text>
+            <Text
+              style={{
+                color: "white",
+                width: 200,
+                padding: 15,
+                fontSize: 15,
+                fontWeight: 500,
+                textAlign: "center",
+              }}
+              onPress={() => setMore(false)}
+            >
+              Cancel
+            </Text>
           </View>
-        </Modal>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -786,8 +974,8 @@ const SingleChat = (props) => {
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 22,
   },
   container: {
@@ -802,17 +990,17 @@ const styles = StyleSheet.create({
     width: captureSize,
     borderRadius: Math.floor(captureSize / 2),
     marginHorizontal: 31,
-},
-capturePicture: {
+  },
+  capturePicture: {
     borderWidth: 6,
-    borderColor: 'gray',
+    borderColor: "gray",
     backgroundColor: "white",
     borderRadius: 5,
     height: captureSize,
     width: captureSize,
     borderRadius: Math.floor(captureSize / 2),
     marginHorizontal: 31,
-},
+  },
 });
 
 //make this component available to the app
