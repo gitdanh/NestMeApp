@@ -5,6 +5,9 @@ const renderMentionLink = (content, navigator, authUsername = "") => {
   const mentions = content.match(mentionRegex);
 
   const onPressMentionHandler = (usernameMention) => {
+    navigator.setOptions({
+      unmountOnBlur: false,
+    });
     navigator.navigate(
       authUsername === usernameMention ? "Profile" : "OtherProfile",
       {

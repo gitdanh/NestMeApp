@@ -17,7 +17,7 @@ import { setSocket } from "../store/redux/slices/chatSlice";
 import { io } from "socket.io-client";
 import * as conversationService from "../services/conversationService";
 import * as notificationsService from "../services/notificationService";
-function Home(props) {
+function Home({ navigation, route }) {
   const { privateRequest } = usePrivateHttpClient();
   const userId = useSelector((state) => state.authenticate.userId);
   const dispatch = useDispatch();
@@ -106,7 +106,6 @@ function Home(props) {
 
   useEffect(() => {
     const handleGetNotification = async (data) => {
-      console.log("Nhận được thông báo:", data);
       if (data.remove == true) {
         setNotification((prevNotifications) =>
           prevNotifications.filter(
@@ -209,7 +208,7 @@ function Home(props) {
               style={{ marginRight: 10 }}
               onPress={async () => {
                 await notificationsService.addReader();
-                props.navigation.navigate("Notify");
+                navigation.navigate("Notify");
               }}
             />
             {unreadNotification > 0 ? (
@@ -242,7 +241,7 @@ function Home(props) {
               name="message1"
               onPress={async () => {
                 await notificationsService.addReader();
-                props.navigation.navigate("Chat");
+                navigation.navigate("Chat");
               }}
             />
             {unreadMsg > 0 ? (

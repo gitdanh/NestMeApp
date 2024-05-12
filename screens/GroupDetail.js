@@ -39,6 +39,7 @@ function GroupDetail(props) {
   const [page, setPage] = useState(1);
   const [postsPage, setPostsPage] = useState(1);
   const [posts, setPosts] = useState([]);
+  const [hasMorePost, setHasMorePost] = useState([]);
 
   const [isEndReached, setIsEndReached] = useState(false);
 
@@ -109,8 +110,8 @@ function GroupDetail(props) {
       const data = response.data;
 
       if (data) {
-        // const postsCount = data?.posts.length;
-        // setHasMorePost(postsCount > 0 && postsCount === 10);
+        const postsCount = data?.posts.length;
+        setHasMorePost(postsCount > 0 && postsCount === 10);
         setPosts((prev) => [...prev, ...data.posts]);
       }
       setPostsLoading(false);
@@ -294,29 +295,28 @@ function GroupDetail(props) {
             </TouchableOpacity>
           </View>
         )}
-        
       </View>
       {posts.length > 0 && (
-          <FlatList
-            style={styles.feedContainer}
-            data={posts}
-            renderItem={(itemData) => {
-              return (
-                <PendingFeed
-                  post={itemData.item}
-                  setPosts={setPosts}
-                  {...lastPostRef(itemData.index)}
-                />
-              );
-            }}
-            keyExtractor={(item, index) => {
-              return item._id;
-            }}
-            scrollEnabled={false}
-            onEndReached={handleEndReached}
-            onEndReachedThreshold={0.1}
-          />
-        )}
+        <FlatList
+          style={styles.feedContainer}
+          data={posts}
+          renderItem={(itemData) => {
+            return (
+              <PendingFeed
+                post={itemData.item}
+                setPosts={setPosts}
+                {...lastPostRef(itemData.index)}
+              />
+            );
+          }}
+          keyExtractor={(item, index) => {
+            return item._id;
+          }}
+          scrollEnabled={false}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.1}
+        />
+      )}
     </ScrollView>
   );
 }

@@ -59,15 +59,18 @@ function Search() {
     return (
       <ListItem
         containerStyle={styles.listItem}
-        onPress={() =>
+        onPress={() => {
+          navigation.setOptions({
+            unmountOnBlur: false,
+          });
           navigation.navigate(
             authUsername === item.username ? "Profile" : "OtherProfile",
             {
               isOwnProfile: authUsername === item.username ? true : false,
               username: item.username,
             }
-          )
-        }
+          );
+        }}
       >
         <View>
           <Avatar

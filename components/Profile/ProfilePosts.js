@@ -14,26 +14,40 @@ import IconMaterial from "react-native-vector-icons/MaterialIcons";
 import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
 import usePrivateHttpClient from "../../axios/private-http-hook";
+import { useNavigation } from "@react-navigation/native";
 
 const ProfilePost = forwardRef(({ item }, ref) => {
-  return ref ? (
-    <View ref={ref} style={{ width: "33%", aspectRatio: 1 }}>
-      <Image
-        source={{ uri: item.media[0] }}
-        style={{ flex: 1, marginBottom: 3, marginHorizontal: 1 }}
-      />
-    </View>
-  ) : (
-    <View style={{ width: "33%", aspectRatio: 1 }}>
-      <Image
-        source={{ uri: item.media[0] }}
-        style={{ flex: 1, marginBottom: 3, marginHorizontal: 1 }}
-      />
-    </View>
+  const navigator = useNavigation();
+
+  return (
+    <TouchableOpacity
+      style={{ width: "33%" }}
+      onPress={() => {
+        navigator.navigate("PostDetail", {
+          post: item,
+        });
+      }}
+    >
+      {ref ? (
+        <View ref={ref} style={{ width: "100%", aspectRatio: 1 }}>
+          <Image
+            source={{ uri: item.media[0] }}
+            style={{ flex: 1, marginBottom: 3, marginHorizontal: 1 }}
+          />
+        </View>
+      ) : (
+        <View style={{ width: "100%", aspectRatio: 1 }}>
+          <Image
+            source={{ uri: item.media[0] }}
+            style={{ flex: 1, marginBottom: 3, marginHorizontal: 1 }}
+          />
+        </View>
+      )}
+    </TouchableOpacity>
   );
 });
 
-const ProfilePosts = ({ username }) => {
+const ProfilePosts = ({ username, avatar, isOwnProfile }) => {
   const { privateRequest } = usePrivateHttpClient();
   const [selected, setSelected] = useState(0);
   const [data, setData] = useState([]);
@@ -73,7 +87,8 @@ const ProfilePosts = ({ username }) => {
       const data = response.data;
 
       if (data) {
-        const postsCount = data.posts.length;
+        const postsCount =
+          selected === 0 ? data.posts.length : data.saved_posts.length;
         setHasMorePost(postsCount > 0 && postsCount === 15);
         selected === 0
           ? setData((prev) => [...prev, ...data.posts])
@@ -99,6 +114,8 @@ const ProfilePosts = ({ username }) => {
               flexDirection: "row",
               alignItems: "center",
               marginBottom: 5,
+              justifyContent: "center",
+              flexGrow: 2,
             }}
           >
             <View
@@ -107,6 +124,7 @@ const ProfilePosts = ({ username }) => {
                 paddingBottom: 15,
                 borderBottomWidth: selected === 0 ? 1 : 0,
                 borderBlockColor: "white",
+                flexGrow: 1,
               }}
             >
               <TouchableOpacity
@@ -120,25 +138,28 @@ const ProfilePosts = ({ username }) => {
                 <IconMaterial color={"gray"} size={25} name="grid-on" />
               </TouchableOpacity>
             </View>
-            <View
-              style={{
-                width: "50%",
-                paddingBottom: 15,
-                borderBottomWidth: selected === 1 ? 1 : 0,
-                borderBlockColor: "white",
-              }}
-            >
-              <TouchableOpacity
-                onPress={() => {
-                  setSelected(1);
-                  setPage(1);
-                  setData([]);
+            {isOwnProfile && (
+              <View
+                style={{
+                  width: "50%",
+                  paddingBottom: 15,
+                  borderBottomWidth: selected === 1 ? 1 : 0,
+                  borderBlockColor: "white",
+                  flexGrow: 1,
                 }}
-                style={{ justifyContent: "center", alignItems: "center" }}
               >
-                <IconFeather color={"gray"} size={25} name="bookmark" />
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelected(1);
+                    setPage(1);
+                    setData([]);
+                  }}
+                  style={{ justifyContent: "center", alignItems: "center" }}
+                >
+                  <IconFeather color={"gray"} size={25} name="bookmark" />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
 
@@ -162,7 +183,7 @@ const ProfilePosts = ({ username }) => {
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.1}
         />
-        {postsLoading && <ActivityIndicator size={25} />}
+        {postsLoading && <ActivityIndicator size={"small"} />}
       </View>
     </SafeAreaView>
   );

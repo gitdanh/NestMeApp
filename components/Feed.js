@@ -96,6 +96,9 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
   }, [post.creator.username]);
 
   const onPressCreatorHandler = () => {
+    navigator.setOptions({
+      unmountOnBlur: false,
+    });
     navigator.navigate(profile, {
       isOwnProfile: profile === "Profile" ? true : false,
       username: post.creator.username,
@@ -394,7 +397,13 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
               {post.content}
             </Text>
           </Text>
-          <Text style={{color: "#A8A8A8", marginBottom: 6}} onPress={() => setIsModalVisible(true)}> See 2 Comments</Text>
+          <Text
+            style={{ color: "#A8A8A8", marginBottom: 6 }}
+            onPress={() => setIsModalVisible(true)}
+          >
+            {" "}
+            See 2 Comments
+          </Text>
         </View>
       ) : (
         <View
@@ -407,7 +416,13 @@ const Feed = forwardRef(({ post, setPosts }, ref) => {
               {post.content}
             </Text>
           </Text>
-          <Text style={{color: "#A8A8A8", marginBottom: 6}} onPress={() => setIsModalVisible(true)}> See 2 Comments</Text>
+          <Text
+            style={{ color: "#A8A8A8", marginBottom: 6 }}
+            onPress={() => setIsModalVisible(true)}
+          >
+            {" "}
+            See 2 Comments
+          </Text>
         </View>
       )}
 

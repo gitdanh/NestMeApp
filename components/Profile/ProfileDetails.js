@@ -34,6 +34,7 @@ const ModalItem = forwardRef(
       myProfile,
       isFriend,
       isSent,
+      socket,
     },
     ref
   ) => {
@@ -49,8 +50,9 @@ const ModalItem = forwardRef(
         if (response.message) {
           setRequestSent(item._id);
           setLoading(false);
+          setStatus("Sent");
           socket.current.emit("sendNotification", {
-            sender_id: userId,
+            sender_id: myId,
             receiver_id: [item._id],
             type: "request",
           });
@@ -81,7 +83,7 @@ const ModalItem = forwardRef(
 
           setLoading(false);
           socket.current.emit("sendNotification", {
-            sender_id: userId,
+            sender_id: myId,
             receiver_id: [item._id],
             reponse: true,
             type: "accept",
@@ -98,14 +100,20 @@ const ModalItem = forwardRef(
         const response = await rejectAddFriend(item._id, privateRequest);
         if (response.message) {
           setRequestDecision(item._id, "REJECT");
+          setUserData((prev) => ({
+            ...prev,
+            friend_requests_count: prev.friend_requests_count - 1,
+          }));
+
+          setStatus("Rejected!");
+
           setLoading(false);
           socket.current.emit("sendNotification", {
-            sender_id: userId,
+            sender_id: myId,
             receiver_id: [item._id],
             reponse: false,
             type: "reject",
           });
-          setStatus("Rejected!");
         }
       } catch (err) {
         console.error("reject ", err);
@@ -137,84 +145,104 @@ const ModalItem = forwardRef(
               {item.full_name}
             </Text>
           </View>
-        </View>
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-          {status !== "" ? (
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: "500",
-                color: "#A8A8A8",
-                marginLeft: 20,
-                marginTop: 10,
-              }}
-            >
-              {status}
-            </Text>
-          ) : loading ? (
-            <ActivityIndicator />
-          ) : listType === 2 ? (
-            <>
-              <TouchableOpacity
+
+          <View
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
+            {status !== "" ? (
+              <Text
                 style={{
-                  width: "45%",
-                  backgroundColor: "#0095f6",
-                  padding: 10,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginRight: "10%",
+                  fontSize: 15,
+                  fontWeight: "500",
+                  color: "#A8A8A8",
+                  marginLeft: 20,
+                  marginTop: 10,
                 }}
-                onPress={handleAccept}
               >
-                <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
-                  Accept
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  width: "45%",
-                  backgroundColor: "#ff6666",
-                  padding: 10,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onPress={handleReject}
-              >
-                <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
-                  Reject
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : listType === 1 ? (
-            <>
-              {myProfile || isFriend || myId === item._id ? null : isSent ? (
-                <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
-                  Sent
-                </Text>
-              ) : (
+                {status}
+              </Text>
+            ) : loading ? (
+              <ActivityIndicator />
+            ) : listType === 2 ? (
+              <>
                 <TouchableOpacity
                   style={{
-                    width: "45%",
+                    width: 70,
                     backgroundColor: "#0095f6",
                     padding: 10,
                     borderRadius: 10,
                     justifyContent: "center",
                     alignItems: "center",
-                    marginRight: "10%",
+                    marginRight: 10,
                   }}
-                  onPress={handleAddFriend}
+                  onPress={handleAccept}
                 >
                   <Text
                     style={{ color: "white", fontSize: 14, fontWeight: 500 }}
                   >
-                    Add friend
+                    Accept
                   </Text>
                 </TouchableOpacity>
-              )}
-            </>
-          ) : null}
+                {/* <TouchableOpacity
+                  style={{
+                    width: "45%",
+                    backgroundColor: "#ff6666",
+                    padding: 10,
+                    borderRadius: 10,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                  onPress={handleReject}
+                >
+                  <Text
+                    style={{ color: "white", fontSize: 14, fontWeight: 500 }}
+                  >
+                    Reject
+                  </Text>
+                  
+                </TouchableOpacity> */}
+                <IconAnt
+                  color={"white"}
+                  size={16}
+                  name="close"
+                  onPress={handleReject}
+                />
+              </>
+            ) : listType === 1 ? (
+              <>
+                {myProfile || isFriend || myId === item._id ? null : isSent ? (
+                  <Text
+                    style={{ color: "white", fontSize: 14, fontWeight: 500 }}
+                  >
+                    Sent
+                  </Text>
+                ) : (
+                  <TouchableOpacity
+                    style={{
+                      width: 95,
+                      backgroundColor: "#0095f6",
+                      padding: 10,
+                      borderRadius: 10,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                    onPress={handleAddFriend}
+                  >
+                    <Text
+                      style={{ color: "white", fontSize: 14, fontWeight: 500 }}
+                    >
+                      Add friend
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            ) : null}
+          </View>
         </View>
       </View>
     );
@@ -233,6 +261,7 @@ const ProfileDetails = ({
   friendRequestsCount,
   isOwnProfile,
   sentFriendRequest,
+  setUserData,
 }) => {
   const navigation = useNavigation();
   const { privateRequest } = usePrivateHttpClient();
@@ -605,6 +634,7 @@ const ProfileDetails = ({
                         isSent={item?.is_friend_request_sent ? true : false}
                         item={item}
                         setRequestSent={setRequestSent}
+                        socket={socket}
                       />
                     );
                   }}
@@ -621,10 +651,12 @@ const ProfileDetails = ({
                   renderItem={({ item, index }) => {
                     return (
                       <ModalItem
+                        myId={myUserId}
                         listType={2}
                         item={item}
                         setRequestDecision={setRequestDecision}
                         setUserData={setUserData}
+                        socket={socket}
                       />
                     );
                   }}
@@ -672,7 +704,7 @@ const ProfileDetails = ({
             </>
           )}
         </View>
-      </Modal> 
+      </Modal>
     </View>
   );
 };

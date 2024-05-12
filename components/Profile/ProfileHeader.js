@@ -14,12 +14,12 @@ import IconEntypo from "react-native-vector-icons/Entypo";
 import IconFeather from "react-native-vector-icons/Feather";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector, useDispatch } from "react-redux";
-import { CommonActions, useNavigation } from "@react-navigation/native";
+import { CommonActions } from "@react-navigation/native";
 import { logoutUser } from "../../store/redux/slices/authSlice";
 import * as conversationService from "../../services/conversationService";
+import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
-const ProfileHeader = ({ props, userId, username, isOwnProfile }) => {
-  const navigation = useNavigation();
+const ProfileHeader = ({ navigation, userId, username, isOwnProfile }) => {
   const dispatch = useDispatch();
 
   const authUserId = useSelector((state) => state.authenticate.userId);
@@ -69,6 +69,8 @@ const ProfileHeader = ({ props, userId, username, isOwnProfile }) => {
     }
   };
 
+  const handleReport = async () => {};
+
   const openActions = () => {
     const actions = [
       isOwnProfile
@@ -77,8 +79,9 @@ const ProfileHeader = ({ props, userId, username, isOwnProfile }) => {
             onPress: () => navigation.navigate("ChangePass"),
           }
         : {
-            text: "Message",
-            onPress: handleMessage,
+            text: "Report",
+            onPress: handleReport,
+            style: "destructive",
           },
       {
         text: "Cancle",
@@ -91,6 +94,11 @@ const ProfileHeader = ({ props, userId, username, isOwnProfile }) => {
         text: "Log out",
         onPress: handleLogout,
         style: "destructive",
+      });
+    } else {
+      actions.push({
+        text: "Message",
+        onPress: handleMessage,
       });
     }
 
@@ -114,9 +122,18 @@ const ProfileHeader = ({ props, userId, username, isOwnProfile }) => {
           alignItems: "center",
         }}
       >
+        {!isOwnProfile && (
+          <IconMaterialCommunityIcons
+            color={"white"}
+            size={30}
+            name="keyboard-backspace"
+            style={{ marginRight: 10 }}
+            onPress={() => navigation.goBack()}
+          />
+        )}
         <Text style={{ fontSize: 24, fontWeight: "500", color: "white" }}>
           {" "}
-          {userData?.username}
+          {username}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <IconFeather

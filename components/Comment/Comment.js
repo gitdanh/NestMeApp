@@ -50,6 +50,9 @@ const Comment = forwardRef(
     const [deleteCmtLoading, setDeleteCmtLoading] = useState(false);
 
     const onPressCreatorHandler = () => {
+      navigator.setOptions({
+        unmountOnBlur: false,
+      });
       navigator.navigate(
         authUsername === comment.user.username ? "Profile" : "OtherProfile",
         {

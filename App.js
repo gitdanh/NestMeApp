@@ -33,6 +33,7 @@ import useRefreshToken from "./axios/refresh-token";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAvatarSource } from "./utils/getImageSource";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import PostDetail from "./screens/PostDetail";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -74,6 +75,7 @@ function MainScreen() {
       <Stack.Screen name="Edit" component={EditProfileScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="GroupDetail" component={GroupDetail} />
+      <Stack.Screen name="PostDetail" component={PostDetail} />
     </Stack.Navigator>
   );
 }
@@ -151,19 +153,49 @@ function AuthenticatedScreen() {
         },
         unmountOnBlur: true,
       })}
+      backBehavior="history"
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Search" component={SearchScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        listeners={({ navigation, route }) => ({
+          focus: (e) => {
+            navigation.setOptions({ unmountOnBlur: true });
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Search"
+        component={SearchScreen}
+        listeners={({ navigation, route }) => ({
+          focus: (e) => {
+            navigation.setOptions({ unmountOnBlur: true });
+          },
+        })}
+      />
       <Tab.Screen
         name="Create"
         component={CreateScreen}
         options={{ tabBarStyle: { display: "none" } }}
       />
-      <Tab.Screen name="Group" component={GroupScreen} />
+      <Tab.Screen
+        name="Group"
+        component={GroupScreen}
+        listeners={({ navigation, route }) => ({
+          focus: (e) => {
+            navigation.setOptions({ unmountOnBlur: true });
+          },
+        })}
+      />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         initialParams={{ isOwnProfile: true, username: "" }}
+        listeners={({ navigation, route }) => ({
+          focus: (e) => {
+            navigation.setOptions({ unmountOnBlur: true });
+          },
+        })}
       />
       {/* <Tab.Screen
         name="SingleChat"
