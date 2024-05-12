@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   FlatList,
@@ -11,10 +11,32 @@ import {
 } from "react-native";
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Feed from "../components/Feed";
-
+import usePrivateHttpClient from "../axios/private-http-hook";
+import {
+  getPost,
+} from "../services/postServices";
 function PostDetail({ navigation, route }) {
-  const { post, setPosts, setUserData } = route.params;
-
+  const { privateRequest } = usePrivateHttpClient();
+  const { postId, setPosts, setUserData } = route.params;
+  const [post, setPost] = useState("");
+  const loadPost = useCallback(async () => {
+    try {
+      const response = await getPost(postId, privateRequest);
+      if (response) {
+        setPost(response.post);
+      }
+      console.log(post);
+    } catch (err) {
+      console.error("Error loading post: ", err);
+      if (err.statusCode === 404) {
+        console.log("User not found!");
+      }
+    }
+  }, [postId]);
+  useEffect(() => {
+    console.log(postId)
+    loadPost();
+  }, [postId])
   const callbackFunc = () => {
     setUserData((prev) => ({
       ...prev,
@@ -49,12 +71,12 @@ function PostDetail({ navigation, route }) {
             />
             <Text style={{ fontSize: 24, fontWeight: "500", color: "white" }}>
               {" "}
-              {post.creator.username}
+              {post != "" && post.creator.username}
             </Text>
           </View>
         </View>
       </View>
-      <Feed post={post} setPosts={setPosts} callbackFunc={callbackFunc} />
+      {post != "" && <Feed post={post} setPosts={setPosts} callbackFunc={callbackFunc} />}
     </View>
   );
 }

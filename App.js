@@ -10,6 +10,7 @@ import GroupDetail from "./screens/GroupDetail";
 import SaveScreen from "./screens/Save";
 import ChangePass from "./screens/ChangePass";
 import EditProfileScreen from "./screens/EditProfile";
+import EditGroup from "./screens/EditGroup";
 import RegisterScreen from "./screens/auth/Register";
 import LoginScreen from "./screens/auth/Login";
 import VerifyOTP from "./screens/auth/VerifyOTP";
@@ -75,6 +76,7 @@ function MainScreen() {
       <Stack.Screen name="Edit" component={EditProfileScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="GroupDetail" component={GroupDetail} />
+      <Stack.Screen name="EditGroup" component={EditGroup} />
       <Stack.Screen name="PostDetail" component={PostDetail} />
       <Stack.Screen name="CreateGroupPost" component={CreateScreen} />
     </Stack.Navigator>

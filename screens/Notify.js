@@ -5,13 +5,14 @@ import { deleteToGroup, acceptToGroup, acceptRequestToGroup, rejectRequestToGrou
 import { useSelector, useDispatch} from "react-redux";
 import { ListItem, Avatar } from 'react-native-elements';
 import React, { useEffect, useState, useRef, useCallback }  from 'react';
-import { View, FlatList, StatusBar, StyleSheet, TouchableOpacity, Text, TextInput ,
+import { View, FlatList, StatusBar, StyleSheet, TouchableOpacity, Text, TextInput , Image,
   ActivityIndicator} from 'react-native';
 import IconMaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconFeather from "react-native-vector-icons/Feather";
 import  { UserSkeleton }  from '../components/UserSkeleton';
 import defaultAvatar from '../assets/default-avatar.jpg';
+import { getGroupCoverUrl } from "../utils/getGroupCoverUrl";
 import { CommonActions, useNavigation } from '@react-navigation/native';
 
 import usePrivateHttpClient from "../axios/private-http-hook";
@@ -24,6 +25,7 @@ function Notify() {
   const [notification, setNotification] = useState([]); 
   const [isPetching, setIsPetching] = useState(false);
   const navigation = useNavigation();
+  const socket = useSelector((state) => state.chat.socket);
   const userId = useSelector((state) => state.authenticate.userId);
   const user ={
       _id: userId
@@ -173,7 +175,7 @@ function Notify() {
       try {
         setDecisionLoading("run");
         const response = await deleteToGroup(
-          n.group_id,
+          item.group_id,
           privateRequest
         );
         if (response !== null) {
@@ -246,19 +248,27 @@ function Notify() {
         (<ListItem
             {...lastNotifyRef(index)}
             containerStyle={styles.listItem}
-            onPress={() => navigation.navigate('SingleChat', { data: item })}
+            onPress={() => navigation.navigate('GroupDetail', { groupId: item.group_id })}
         >
             <View>
-            {item?.content == " has been a member of your group" ||  item?.content == " want to join " ?
+            {item?.content != " has been a member of your group" ||  item?.content == " want to join " ?
               <Avatar source={!item.img 
-                ? defaultAvatar : { uri: item.img }} rounded size="medium" />
-              : <Avatar source={{ uri: item.group_cover }} style={{borderRadius: 10}}  size="medium" />
+                ? defaultAvatar : { uri: item.img }} rounded size="small" />
+              : <Image
+              style={{ width: 35, height: 35, borderRadius: 10 }}
+              source={getGroupCoverUrl(item.group_cover)}
+            />
             }
             </View>
             <ListItem.Content style={styles.content}>
               <View style={styles.titleSubtitleContainer}>
                 <Text>
-                  {item.senderName != "administrator" && <Text style={styles.name}>{item.senderName}</Text>}
+                  {item.senderName != "administrator" && (item?.content === " has been a member of your group" ||  item?.content === " want to join " ? 
+                  <Text style={styles.name} onPress={() => navigation.navigate("OtherProfile", {
+                    isOwnProfile: false,
+                    username: item.senderName,
+                  })}>{item.senderName}</Text> : 
+                  <Text style={styles.name} onPress={() => navigation.navigate('GroupDetail', { groupId: item.group_id })}>{item.group_name}</Text>)}
                   <Text style={styles.subtitle}>{decisionLoading
                     ? decisionLoading === "accept"
                       ? " is accepted by you"
@@ -336,8 +346,11 @@ function Notify() {
           (<ListItem
             {...lastNotifyRef(index)}
             containerStyle={styles.listItem}
-            onPress={() => navigation.navigate('SingleChat', { data: item })}
-          >
+            onPress={() => {
+              if(item.content_id){
+                navigation.navigate('PostDetail', { postId: item.content_id })
+              }
+          }}>
             <View>
               <Avatar source={!item.img 
                 ? defaultAvatar : { uri: item.img }} rounded size="small" />
@@ -345,7 +358,10 @@ function Notify() {
             <ListItem.Content style={styles.content}>
               <View style={styles.titleSubtitleContainer}>
                 <Text>
-                  {item.senderName != "administrator" && <Text style={styles.name}>{item.senderName}</Text>}
+                  {item.senderName != "administrator" ? <Text style={styles.name} onPress={() => navigation.navigate("OtherProfile", {
+                    isOwnProfile: false,
+                    username: item.senderName,
+                  })}>{item.senderName}</Text> : <Text style={styles.name}>{item.senderName}</Text>}
                   <Text style={styles.subtitle}>
                     {decisionLoading
                     ? decisionLoading === "accept"

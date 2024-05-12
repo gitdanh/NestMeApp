@@ -528,7 +528,7 @@ function GroupDetail(props) {
       data.is_group_admin
         ? {
             text: "Edit group information",
-            onPress: () => {},
+            onPress: () => {navigation.navigate("EditGroup", { group: data })},
           }
         : {
             text: "Leave group",

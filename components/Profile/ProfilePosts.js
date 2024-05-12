@@ -24,7 +24,7 @@ const ProfilePost = forwardRef(({ item, setPosts, setUserData }, ref) => {
       style={{ width: "33%" }}
       onPress={() => {
         navigator.navigate("PostDetail", {
-          post: item,
+          postId: item._id,
           setPosts: setPosts,
           setUserData: setUserData,
         });

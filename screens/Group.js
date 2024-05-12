@@ -1,5 +1,5 @@
 import defaultCover from "../assets/default-cover.jpg";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect,forwardRef } from "react";
 import {
   View,
   StyleSheet,
@@ -27,11 +27,17 @@ import {
   getInvitedGroups,
   createGroup,
   searchGroups,
+  acceptToGroup,
+  deleteToGroup,
+  requestToGroup,
+
 } from "../services/groupService";
 import { getGroupCoverUrl } from "../utils/getGroupCoverUrl";
+import { SearchGroupItems } from "../components/SearchGroupItems";
+import { InvitedGroupItem } from "../components/InvitedGroupItem";
 function Group() {
   const navigation = useNavigation();
-  const privateHttpRequest = usePrivateHttpClient();
+  const {privateRequest} = usePrivateHttpClient();
   const [modalInvited, setModalInvited] = useState(false);
   const [modal, setModal] = useState(false);
   const [name, setName] = useState("");
@@ -53,7 +59,7 @@ function Group() {
   const getAdminGroup = useCallback(async () => {
     try {
       setIsLoadingSearch(true);
-      const data = await getAdminGroups(privateHttpRequest.privateRequest);
+      const data = await getAdminGroups(privateRequest);
       setAdminGroups(data.groups);
       console.log(data);
     } catch (err) {
@@ -63,7 +69,7 @@ function Group() {
 
   const getMemberGroup = useCallback(async () => {
     try {
-      const data = await getMemberGroups(privateHttpRequest.privateRequest);
+      const data = await getMemberGroups(privateRequest);
       setMemberGroups(data.groups);
     } catch (err) {
       console.error(err);
@@ -72,7 +78,7 @@ function Group() {
 
   const getInvitedGroup = useCallback(async () => {
     try {
-      const data = await getInvitedGroups(privateHttpRequest.privateRequest);
+      const data = await getInvitedGroups(privateRequest);
       if (data) {
         setInvitedGroups(data.groups);
         setIsLoadingSearch(false);
@@ -97,7 +103,7 @@ function Group() {
           cover: "",
           status: "ADMIN",
         },
-        privateHttpRequest.privateRequest
+        privateRequest
       );
       if (respone !== null) {
         setAdminGroups((prev) => [...prev, respone]);
@@ -119,8 +125,9 @@ function Group() {
           paddingHorizontal: 20,
           paddingVertical: 15,
         }}
-        onPress={() =>
-          navigation.navigate("GroupDetail", { groupId: item._id })
+        onPress={() =>{
+            navigation.navigate("GroupDetail", { groupId: item._id })
+          }
         }
       >
         <Image
@@ -148,140 +155,6 @@ function Group() {
     );
   };
 
-  const renderModalItems = ({ item }) => {
-    const [status, setStatus] = useState("")
-    const [loading, setLoading] = useState(false)
-    const handleDeleteToGroup = async () => {
-        if(!loading){
-            setLoading(true);
-            try {
-                const respone = await deleteToGroup(
-                  item._id,
-                  privateHttpRequest.privateRequest
-                );
-                if (respone !== null) {
-                    setStatus("Rejected");
-                    setLoading(false);
-                    socket.current.emit("sendNotification", {
-                        sender_id: user._id,
-                        receiver_id: [item.owner],
-                        group_id: item._id,
-                        reponse: false,
-                        type: "rejectGroup",
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-                setLoading(false);
-            }
-        }
-    };
-
-    const handleAcceptToGroup = async () => {
-        if(!loading){
-            setLoading(true);
-            console.log(item._id);
-            try {
-                const respone = await acceptToGroup(
-                item._id,
-                privateHttpRequest.privateRequest
-                );
-                if (respone !== null) {
-                    setStatus("Accepted");
-                    const newgroup = {_id: item._id, name: item.name, cover: item.cover, status: "MEMBER"}
-                    setMemberGroups(prev => [...prev, newgroup])
-                    setLoading(false);
-                    socket.current.emit("sendNotification", {
-                        sender_id: user._id,
-                        receiver_id: [item.owner],
-                        group_id: item._id,
-                        reponse: true,
-                        type: "acceptGroup",
-                      });
-                }
-                console.log(respone);
-            } catch (err) {
-                console.error(err);
-                setLoading(false);
-            }
-        }
-    };
-    return (
-      <View style={{ marginBottom: 10 }}>
-        <View style={{ flexDirection: "row", paddingVertical: 15 }}>
-          <Image
-            source={getGroupCoverUrl(item.cover)}
-            style={{ borderRadius: 10, width: 40, height: 40 }}
-          />
-          <View style={{ flexDirection: "column", marginLeft: 20 }}>
-            <Text style={{ color: "white", fontSize: 15, fontWeight: 700 }}>
-              {item.name}
-            </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 14,
-                fontWeight: 400,
-                flexWrap: "nowrap",
-                maxWidth: "100%",
-              }}
-              numberOfLines={1}
-            >
-              {item.description}
-            </Text>
-          </View>
-        </View>
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-        {status !== "" ? 
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: "500",
-                color: "#A8A8A8",
-                marginLeft: 20,
-                marginTop: 10,
-              }}
-            >
-              {status}
-            </Text>
-          : <>
-          <TouchableOpacity
-            style={{
-              width: "45%",
-              backgroundColor: "#0095f6",
-              padding: 10,
-              borderRadius: 10,
-              justifyContent: "center",
-              alignItems: "center",
-              marginRight: "10%",
-            }}
-            onPress={handleAcceptToGroup}
-          >
-            <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
-              Accept
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              width: "45%",
-              backgroundColor: "#ff6666",
-              padding: 10,
-              borderRadius: 10,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            onPress={handleDeleteToGroup}
-          >
-            <Text style={{ color: "white", fontSize: 14, fontWeight: 500 }}>
-              Reject
-            </Text>
-          </TouchableOpacity>
-          </>}
-        </View>
-      </View>
-    );
-  };
-
   const searchGroup = async (data) => {
     if (data.trim() === "") {
       setIsSearching(false);
@@ -292,7 +165,7 @@ function Group() {
     try {
       const result = await searchGroups(
         data,
-        privateHttpRequest.privateRequest
+        privateRequest
       );
       console.log(result);
       if (result !== null) {
@@ -430,7 +303,12 @@ function Group() {
               showsVerticalScrollIndicator={false}
               keyExtractor={(item, index) => index.toString()}
               data={searchedGroups}
-              renderItem={renderItems}
+              renderItem={({ item, index }) => {
+                return (
+                  <SearchGroupItems item={item} setSearchedGroups = {setSearchedGroups} searchedGroups={searchedGroups}/>
+                );
+              }}
+              // renderItem={renderItems}
             />
           </View>
         ) : (
@@ -608,7 +486,12 @@ function Group() {
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
                 data={invitedGroups}
-                renderItem={renderModalItems}
+                renderItem={({ item, index }) => {
+                  return (
+                    <InvitedGroupItem item={item} setMemberGroups={setMemberGroups} setInvitedGroups={setInvitedGroups}/>
+                  );
+                }}
+                // renderItem={ModalItems}
               />
             </View>
           </View> : <View
