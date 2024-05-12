@@ -17,6 +17,7 @@ import PrimaryButton from "../../components/button/PrimaryButton";
 import { container, form } from "../../styles/authStyle";
 import useHttpClient from "../../axios/public-http-hook";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 import { useRefreshToken } from "../../axios/refresh-token";
 const logo = require("../../assets/logo-white.png");
 
@@ -61,6 +62,14 @@ export default function Login(props) {
       }
     }
   };
+  
+  // State variable to track password visibility 
+  const [showPassword, setShowPassword] = useState(false); 
+
+  // Function to toggle the password visibility state 
+  const toggleShowPassword = () => { 
+      setShowPassword(!showPassword); 
+  }; 
   return (
     <TouchableWithoutFeedback
       onPress={() => {
@@ -99,13 +108,22 @@ export default function Login(props) {
               placeholderTextColor="gray"
               onChangeText={(value) => handleChangeText("username", value)}
             />
-            <TextInput
-              style={form.textInput}
-              placeholder="Password"
-              placeholderTextColor="gray"
-              secureTextEntry={true}
-              onChangeText={(value) => handleChangeText("password", value)}
-            />
+            <View>
+              <TextInput
+                style={form.textInput}
+                placeholder="Password"
+                placeholderTextColor="gray"
+                secureTextEntry={!showPassword} 
+                onChangeText={(value) => handleChangeText("password", value)}
+              />
+                <MaterialCommunityIcons 
+                    name={showPassword ? 'eye-off' : 'eye'} 
+                    size={24} 
+                    color="#aaa"
+                    style={{marginLeft: 10, position:"absolute", right: 15, top: "20%"}} 
+                    onPress={toggleShowPassword} 
+                /> 
+            </View>
 
             <PrimaryButton onPress={onSignIn} isLoading={loginLoading}>
               Sign In

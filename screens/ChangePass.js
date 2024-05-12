@@ -72,6 +72,30 @@ export default function ChangePass(props) {
     }
   };
 
+  // State variable to track password visibility 
+  const [showOldPassword, setShowOldPassword] = useState(false); 
+
+  // Function to toggle the password visibility state 
+  const toggleShowOldPassword = () => { 
+      setShowOldPassword(!showOldPassword); 
+  }; 
+
+  // State variable to track password visibility 
+  const [showNewPassword, setShowNewPassword] = useState(false); 
+
+  // Function to toggle the password visibility state 
+  const toggleShowNewPassword = () => { 
+      setShowNewPassword(!showNewPassword); 
+  }; 
+
+  // State variable to track password visibility 
+  const [showRpPassword, setShowRpPassword] = useState(false); 
+
+  // Function to toggle the password visibility state 
+  const toggleShowRpPassword = () => { 
+      setShowRpPassword(!showRpPassword); 
+  }; 
+
   return (
     <TouchableWithoutFeedback
       onPress={() => {
@@ -98,27 +122,55 @@ export default function ChangePass(props) {
             behavior="position"
             keyboardVerticalOffset={-70}
           >
-            <TextInput
-              style={form.textInput}
-              placeholder="Old Password"
-              placeholderTextColor="gray"
-              keyboardType="twitter"
-              onChangeText={(value) => handleChangeText("oldpw", value)}
-            />
-            <TextInput
-              style={form.textInput}
-              placeholder="New Password"
-              placeholderTextColor="gray"
-              secureTextEntry={true}
-              onChangeText={(value) => handleChangeText("newpw", value)}
-            />
-            <TextInput
-              style={form.textInput}
-              placeholder="Repeat Password"
-              placeholderTextColor="gray"
-              secureTextEntry={true}
-              onChangeText={(value) => handleChangeText("repeatpw", value)}
-            />
+            <View>
+              <TextInput
+                style={form.textInput}
+                placeholder="Old Password"
+                placeholderTextColor="gray"
+                keyboardType="twitter"
+                secureTextEntry={!showOldPassword}
+                onChangeText={(value) => handleChangeText("oldpw", value)}
+              />
+              <IconMaterialCommunityIcons 
+                    name={showOldPassword ? 'eye-off' : 'eye'} 
+                    size={24} 
+                    color="#aaa"
+                    style={{marginLeft: 10, position:"absolute", right: 15, top: "20%"}} 
+                    onPress={toggleShowOldPassword} 
+                /> 
+            </View>
+            <View>
+              <TextInput
+                style={form.textInput}
+                placeholder="New Password"
+                placeholderTextColor="gray"
+                secureTextEntry={!showNewPassword}
+                onChangeText={(value) => handleChangeText("newpw", value)}
+              />
+              <IconMaterialCommunityIcons 
+                      name={showNewPassword ? 'eye-off' : 'eye'} 
+                      size={24} 
+                      color="#aaa"
+                      style={{marginLeft: 10, position:"absolute", right: 15, top: "20%"}} 
+                      onPress={toggleShowNewPassword} 
+                  /> 
+            </View>
+            <View>
+              <TextInput
+                style={form.textInput}
+                placeholder="Repeat Password"
+                placeholderTextColor="gray"
+                secureTextEntry={!showRpPassword}
+                onChangeText={(value) => handleChangeText("repeatpw", value)}
+              />
+              <IconMaterialCommunityIcons 
+                        name={showRpPassword ? 'eye-off' : 'eye'} 
+                        size={24} 
+                        color="#aaa"
+                        style={{marginLeft: 10, position:"absolute", right: 15, top: "20%"}} 
+                        onPress={toggleShowRpPassword} 
+                    /> 
+            </View>
 
             <PrimaryButton onPress={updatePass} isLoading={updatePassLoading}>
               Change

@@ -12,6 +12,7 @@ import { container, form } from "../../styles/authStyle";
 import useHttpClient from "../../axios/public-http-hook";
 import PrimaryButton from "../../components/button/PrimaryButton";
 import OTPInput from "../../components/OTPInput/OTPInput";
+import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 
 export default function VerifyOTPResetPassword({ navigation, route }) {
   const pulicHttpRequest = useHttpClient();
@@ -88,6 +89,14 @@ export default function VerifyOTPResetPassword({ navigation, route }) {
     navigation.goBack();
   };
 
+  // State variable to track password visibility 
+  const [showPassword, setShowPassword] = useState(false); 
+
+  // Function to toggle the password visibility state 
+  const toggleShowPassword = () => { 
+      setShowPassword(!showPassword); 
+  }; 
+
   return (
     <TouchableWithoutFeedback
       onPress={() => {
@@ -140,13 +149,22 @@ export default function VerifyOTPResetPassword({ navigation, route }) {
             >
               Enter new password:
             </Text>
-            <TextInput
-              style={[form.textInput, { width: "90%" }]}
-              placeholder="New password"
-              placeholderTextColor="gray"
-              secureTextEntry={true}
-              onChangeText={(value) => setPassword(value)}
-            />
+            <View>
+              <TextInput
+                style={[form.textInput, { width: "90%" }]}
+                placeholder="New password"
+                placeholderTextColor="gray"
+                secureTextEntry={!showPassword}
+                onChangeText={(value) => setPassword(value)}
+              />
+              <MaterialCommunityIcons 
+                    name={showPassword ? 'eye-off' : 'eye'} 
+                    size={24} 
+                    color="#aaa"
+                    style={{marginLeft: 10, position:"absolute", right: 15, top: "20%"}} 
+                    onPress={toggleShowPassword} 
+                /> 
+            </View>
             <PrimaryButton
               onPress={handleChangePassword}
               overwriteTextStyle={{ fontSize: 20 }}
