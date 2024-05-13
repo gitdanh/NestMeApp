@@ -84,6 +84,7 @@ export const SearchGroupItems = ({ item, setSearchedGroups, searchedGroups }) =>
             group_id: item._id,
             reponse: false,
             type: "rejectGroup",
+            remove: true
           });
           setLoading(false);
         }

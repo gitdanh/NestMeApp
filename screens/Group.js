@@ -222,6 +222,31 @@ function Group() {
             onPress={() => setModalInvited(true)}
           />
 
+          {invitedGroups.length > 0 && (
+            <View
+              style={{
+                position: "absolute",
+                width: 13,
+                height: 12,
+                borderRadius: 50,
+                backgroundColor: "rgb(255, 8, 8)",
+                left: "20%",
+                top: 15,
+              }}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 9,
+                  marginLeft: 4,
+                  marginBottom: 2,
+                }}
+              >
+                {invitedGroups.length}
+              </Text>
+            </View>
+          )}
+
           <Icon
             color={"white"}
             size={25}

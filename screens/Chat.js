@@ -344,7 +344,7 @@ function Chat(props) {
             </Text>
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {/* <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Icon
               color={"white"}
               size={25}
@@ -352,7 +352,7 @@ function Chat(props) {
               style={{ marginRight: 10 }}
             />
             <IconFeather color={"white"} size={25} name="menu" />
-          </View>
+          </View> */}
         </View>
       </View>
       <View
@@ -402,9 +402,9 @@ function Chat(props) {
       ) : (
         <UserSkeleton />
       )}
-      <TouchableOpacity style={styles.button} onPress={navigateToAllUser}>
+      {/* <TouchableOpacity style={styles.button} onPress={navigateToAllUser}>
         <Icon color="#fff" size={20} name="users" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }

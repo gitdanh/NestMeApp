@@ -545,7 +545,7 @@ const SingleChat = (props) => {
             name="keyboard-backspace"
             style={{ marginRight: 10 }}
             onPress={() => {
-              props.navigation.navigate("Chat");
+              props.navigation.navigate("Chat", { con: data._id });
               setMsg([]);
             }}
           />
