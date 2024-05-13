@@ -6,7 +6,7 @@ import { Camera } from "expo-camera/legacy";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Dimensions,
   SafeAreaView,
@@ -20,6 +20,7 @@ import {
   View,
   Platform,
 } from "react-native";
+import mime from "mime";
 
 const WINDOW_HEIGHT = Dimensions.get("window").height;
 const WINDOW_WIDTH = Dimensions.get("window").width;
@@ -44,7 +45,7 @@ export default function VideoScreen(props) {
     props.route.params.groupPost ? props.route.params.groupId : null
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     (async () => {
       const cameraPermissions = await Camera.requestCameraPermissionsAsync();
       const galleryPermissions = await MediaLibrary.requestPermissionsAsync();

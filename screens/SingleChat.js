@@ -445,7 +445,18 @@ const SingleChat = (props) => {
           sortBy: ["creationTime"],
           mediaType: ["photo", "video"],
         });
-        setGalleryItems(getPhotos);
+        const modifiedUriPhotos = await Promise.all(
+          getPhotos.assets.map(async (getPhoto) => {
+            let uri = getPhoto.uri;
+            if (Platform.OS === "ios") {
+              const assetInfo = await MediaLibrary.getAssetInfoAsync(getPhoto);
+              uri = assetInfo.localUri;
+            }
+            return { ...getPhoto, uri };
+          })
+        );
+
+        setGalleryItems(modifiedUriPhotos);
         setHasPermission(true);
       }
     })();
@@ -748,7 +759,7 @@ const SingleChat = (props) => {
                     scrollEnabled={false}
                     numColumns={3}
                     horizontal={false}
-                    data={galleryItems.assets}
+                    data={galleryItems}
                     contentContainerStyle={{
                       flexGrow: 1,
                     }}
