@@ -1,8 +1,8 @@
+Website mạng xã hội
+
 Các yêu cầu về môi trường cài đặt và phiên bản phần mềm
--	Ngôn ngữ lập trình: JavaScript.
 -	Hệ thống cơ sở dữ liệu: MongoDB.
 -	Quản lý mã nguồn: Github.
--	Hệ quản trị cơ sở dữ liệu: MongoDB Atlas.
 -	Thiết kế Usecase và biểu đồ: Draw.io.
 -	Phiên bản MongoDB: 5.0.14.
 -	Phiên bản ExpressJS: 4.17.1.
